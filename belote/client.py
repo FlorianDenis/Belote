@@ -89,7 +89,7 @@ class Client:
 
 
     def _play_card(self, card):
-        self._perform(constants.CommandOpcode.PLAY_CARD, card)
+        self._perform(constants.CommandOpcode.PLAY_CARD, card.code)
 
 
     def _handle_new_proxy(self, proxy):

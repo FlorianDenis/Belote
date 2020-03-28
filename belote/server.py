@@ -8,6 +8,7 @@ import logging
 import socket
 import threading
 
+from . import card
 from . import constants
 from . import packet
 from . import player
@@ -121,7 +122,7 @@ class Server:
         if rx_cmd.opcode == constants.CommandOpcode.PLAY_CARD:
             if link.player is None:
                 return
-            self._game.play_card(link.player, rx_cmd.args[0])
+            self._game.play_card(link.player, card.Card(rx_cmd.args[0]))
 
 
     def __recv(self, transport, rx_packet):

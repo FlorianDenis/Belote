@@ -10,7 +10,9 @@ import threading
 
 from enum import Enum
 
+from . import card
 from . import constants
+from . import player
 
 
 log = logging.getLogger(__name__)
@@ -60,7 +62,7 @@ class Game:
     def card_deck(self):
         # TODO: This should be tracked from one game to the other,
         # not randomized at each new round
-        all_cards = [card.value for card in constants.Card]
+        all_cards = card.all
         random.shuffle(all_cards)
         return all_cards
 
@@ -164,18 +166,27 @@ class Game:
 
         elif len(self._cards) == 4:
             # Hand completed, will reset the pli in 2 seconds
-            threading.Timer(2, self._reset_pli).start()
+            threading.Timer(2, self._finish_pli).start()
 
         self.on_status_changed()
 
 
-    def _reset_pli(self):
+    def _finish_pli(self):
+
+        # Find out who won it
+        ordered_players = [self._players[idx % 4] for idx in range(
+            self._starting_player_pli, self._starting_player_pli + 4)]
+
+
+
+
         self._cards = {}
 
         # TODO: Not the next one, but the one who got the previous round
         self._starting_player_pli = (self._starting_player_pli + 1) % 4
 
         self.on_status_changed()
+
 
 
     def _reset_round(self):
@@ -250,15 +261,12 @@ class Game:
         proxy._cards = [
             self._cards[self._players[idx]]
                 if idx < len(self._players) and self._players[idx] in self._cards
-                    else ""
+                    else card.Card("")
                 for idx in idx_permutation
         ]
 
         proxy._hand = self._hands[player] if player in self._hands else []
-        # Sort by order
-        all_cards = [card.value for card in constants.Card] + ['']
-        proxy._hand.sort(key=lambda x: all_cards.index(x))
-
+        proxy._hand.sort(key=lambda x: x.sort_value(self._trump_suit))
 
         proxy._starting_player = idx_permutation.index(self._starting_player_pli)
 
@@ -318,11 +326,10 @@ class GameProxy:
         args.append(str(self._starting_player))
 
         args += self._players
-        args += self._cards
+        args += [card.code for card in self._cards]
 
         args.append(str(len(self._hand)))
-        args += self._hand
-
+        args += [card.code for card in self._hand]
 
         return args
 
@@ -345,12 +352,12 @@ def from_args(args):
     proxy._players = args[idx: idx+4]
     idx += 4
 
-    proxy._cards = args[idx: idx+4]
+    proxy._cards = [card.Card(code) for code in args[idx: idx+4]]
     idx += 4
 
     hand_count = int(args[idx])
     idx += 1
-    proxy._hand = args[idx: idx+hand_count]
+    proxy._hand = [card.Card(code) for code in args[idx: idx+hand_count]]
     idx += hand_count
 
     return proxy

@@ -40,7 +40,7 @@ Trump = Enum('Trump', [(a, a) for a in (
 )], type=str)
 
 # Code for the 32 cards.
-Card = Enum('Card', [(a, a) for a in (
+CardCode = Enum('CardCode', [(a, a) for a in (
     '7H',
     '8H',
     '9H',

@@ -147,7 +147,7 @@ class GUI:
                     hand_zone_rect.minY),
                 card_size)
 
-            card_texture = self._card_texture(proxy.hand[i])
+            card_texture = self._card_texture(proxy.hand[i].code)
             card_texture = pygame.transform.scale(card_texture,
                 (card_size.w, card_size.h))
 
@@ -184,10 +184,10 @@ class GUI:
         for idx in range(4):
             card = proxy.cards[idx]
 
-            if card is "":
+            if card.code is "":
                 continue
 
-            card_texture = self._card_texture(card)
+            card_texture = self._card_texture(card.code)
             card_texture = pygame.transform.scale(card_texture,
                 (card_size.w, card_size.h))
 
