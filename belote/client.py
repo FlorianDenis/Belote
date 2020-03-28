@@ -53,8 +53,9 @@ class Client:
 
         # Create GUI
         self._gui = gui.GUI()
+        self._gui.on_card_picked = self._play_card
 
-        # Register a new player
+        # Register as a new player
         self._register()
 
         self._gui.run()
@@ -77,7 +78,11 @@ class Client:
             self._player.name)
 
 
-    def _handle_new_proxy(self, proxy):    
+    def _play_card(self, card):
+        self._perform(constants.CommandOpcode.PLAY_CARD, card)
+
+
+    def _handle_new_proxy(self, proxy):
         self._gui.set_game(proxy)
 
 

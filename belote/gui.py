@@ -26,6 +26,9 @@ class GUI:
         # This means run() won't return
         self._running = False
 
+        # Callbacks
+        self.on_card_picked = None
+
         self._game = None
 
         pygame.display.set_caption("Belote")
@@ -47,9 +50,10 @@ class GUI:
                 if event.type == pygame.QUIT:
                     self._running = False
                     pygame.quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self._handle_click(event)
 
             # Process incoming actions events
-
 
     def _redraw(self, proxy):
 
@@ -58,11 +62,13 @@ class GUI:
         # Background: solid green color
         background_rect = screen
 
-        background = pygame.Surface((background_rect.size.w, background_rect.size.h))
+        background = pygame.Surface(
+            (background_rect.size.w, background_rect.size.h))
         background = background.convert()
         background.fill((80, 150, 15))
 
-        self._win.blit(background, (background_rect.origin.x, background_rect.origin.y))
+        self._win.blit(background,
+            (background_rect.origin.x, background_rect.origin.y))
 
         # Toolbar: bottom of the screen
         toolbar_height = 40
@@ -80,10 +86,9 @@ class GUI:
             pygame.display.update()
             return
 
-        font = pygame.font.SysFont('arial', 15)
+        font = pygame.font.SysFont('arial', 20)
 
         # Game status
-
         status = {
             game.Game.State.WAITING_FOR_PLAYERS: "Waiting...",
             game.Game.State.READY_TO_START:      "Ready",
@@ -91,7 +96,6 @@ class GUI:
         }
 
         status_text = font.render(status[proxy.state], 1, (255, 255, 255))
-
         status_origin = Point(
             toolbar_rect.minX + 30,
             toolbar_rect.midY - status_text.get_height()/2)
@@ -121,6 +125,8 @@ class GUI:
 
         path = os.path.dirname(__file__)
 
+        self._card_rects = []
+
         for i in range(num_cards_hand):
             card_position = Rect(
                 Point(
@@ -131,20 +137,22 @@ class GUI:
             texture_name = 'resources/{}.png'.format(proxy.hand[i])
             texture_path = os.path.join(path, texture_name)
             card_texture = pygame.image.load(texture_path)
-            card_texture = pygame.transform.scale(card_texture, (card_size.w, card_size.h))
+            card_texture = pygame.transform.scale(card_texture,
+                (card_size.w, card_size.h))
+
+            card_rect = pygame.Rect(
+                card_position.origin.x, card_position.origin.y,
+                card_size.w, card_size.h)
+
+            self._card_rects.append(card_rect)
 
             self._win.blit(card_texture,
                 (card_position.origin.x, card_position.origin.y))
 
-
         # Cards
-
         card_zone_rect = Rect(
             Point(screen.minX, screen.minY),
             Size(screen.size.w, hand_zone_rect.minY - screen.minY))
-
-
-
 
         # Player names
         player_names_inset = Size(50, 20)
@@ -174,3 +182,13 @@ class GUI:
                 (player_text_origin.x, player_text_origin.y))
 
         pygame.display.update()
+
+
+    def _handle_click(self, event):
+
+        # Picked a card ?
+        for card in reversed(self._card_rects):
+            if card.collidepoint(pygame.mouse.get_pos()):
+                card_idx = self._card_rects.index(card)
+                self.on_card_picked(self._game.hand[card_idx])
+                return
