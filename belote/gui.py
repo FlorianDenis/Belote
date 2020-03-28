@@ -40,7 +40,7 @@ class GUI:
         while self._running:
 
             # Redraw
-            self._redraw()
+            self._redraw(self._game)
 
             # Process input events
             for event in pygame.event.get():
@@ -51,7 +51,7 @@ class GUI:
             # Process incoming actions events
 
 
-    def _redraw(self):
+    def _redraw(self, proxy):
 
         screen = Rect(Point(0, 0), Size(self._w, self._h))
 
@@ -76,7 +76,7 @@ class GUI:
 
         self._win.blit(toolbar, (toolbar_rect.origin.x, toolbar_rect.origin.y))
 
-        if self._game is None:
+        if proxy is None:
             pygame.display.update()
             return
 
@@ -90,7 +90,7 @@ class GUI:
             game.Game.State.ONGOING:              "",
         }
 
-        status_text = font.render(status[self._game.state], 1, (255, 255, 255))
+        status_text = font.render(status[proxy.state], 1, (255, 255, 255))
 
         status_origin = Point(
             toolbar_rect.minX + 30,
@@ -103,7 +103,7 @@ class GUI:
         card_spacing = 30
         card_size = Size(130, 200)
 
-        num_cards_hand = len(self._game.hand)
+        num_cards_hand = len(proxy.hand)
 
         hand_zone_height = 200
         hand_zone_width = (num_cards_hand-1) * card_spacing + card_size.w
@@ -128,7 +128,7 @@ class GUI:
                     hand_zone_rect.minY),
                 card_size)
 
-            texture_name = 'resources/{}.png'.format(self._game.hand[i])
+            texture_name = 'resources/{}.png'.format(proxy.hand[i])
             texture_path = os.path.join(path, texture_name)
             card_texture = pygame.image.load(texture_path)
             card_texture = pygame.transform.scale(card_texture, (card_size.w, card_size.h))
@@ -142,6 +142,7 @@ class GUI:
         card_zone_rect = Rect(
             Point(screen.minX, screen.minY),
             Size(screen.size.w, hand_zone_rect.minY - screen.minY))
+
 
 
 
@@ -163,7 +164,7 @@ class GUI:
         }
 
         for idx in range(4):
-            player_name = self._game.players[idx]
+            player_name = proxy.players[idx]
             player_text = font.render(player_name, 1, (255, 255, 255))
             player_text_origin = Point(
                 player_name_center[idx].x - player_text.get_width()/2,
