@@ -100,9 +100,14 @@ class Server:
 
         if rx_cmd.opcode == constants.CommandOpcode.CREATE_PLAYER:
             # Add a new player to current game
-            if link.player == None:
+            if link.player is None:
                 link.player = player.Player(rx_cmd.args[0], rx_cmd.args[1])
                 self._game.add_player(link.player)
+
+        if rx_cmd.opcode == constants.CommandOpcode.PLAY_CARD:
+            if link.player is None:
+                return
+            self._game.play_card(link.player, rx_cmd.args[0])
 
 
     def __recv(self, transport, rx_packet):

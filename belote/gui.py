@@ -19,7 +19,7 @@ class GUI:
     def __init__(self):
         # Setup window
         self._w = 800
-        self._h = 600
+        self._h = 800
         self._win = pygame.display.set_mode((self._w, self._h))
 
         # GUI is not threaded, the runloop takes place in the main thread
@@ -38,6 +38,7 @@ class GUI:
     def set_game(self, game):
         self._game = game
 
+
     def run(self):
         self._running = True
         while self._running:
@@ -53,7 +54,13 @@ class GUI:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self._handle_click(event)
 
-            # Process incoming actions events
+
+    def _card_texture(self, card):
+        path = os.path.dirname(__file__)
+        texture_name = 'resources/{}.png'.format(card)
+        texture_path = os.path.join(path, texture_name)
+        return pygame.image.load(texture_path)
+
 
     def _redraw(self, proxy):
 
@@ -123,8 +130,6 @@ class GUI:
             Size(hand_zone_width, hand_zone_height))
 
 
-        path = os.path.dirname(__file__)
-
         self._card_rects = []
 
         for i in range(num_cards_hand):
@@ -134,9 +139,7 @@ class GUI:
                     hand_zone_rect.minY),
                 card_size)
 
-            texture_name = 'resources/{}.png'.format(proxy.hand[i])
-            texture_path = os.path.join(path, texture_name)
-            card_texture = pygame.image.load(texture_path)
+            card_texture = self._card_texture(proxy.hand[i])
             card_texture = pygame.transform.scale(card_texture,
                 (card_size.w, card_size.h))
 
@@ -154,6 +157,40 @@ class GUI:
             Point(screen.minX, screen.minY),
             Size(screen.size.w, hand_zone_rect.minY - screen.minY))
 
+        card_zone_inset = Size(250, 150)
+        card_zone_contour = Rect(
+            Point(
+                card_zone_rect.minX + card_zone_inset.w,
+                card_zone_rect.minY + card_zone_inset.h),
+            Size(
+                card_zone_rect.size.w - 2 * card_zone_inset.w,
+                card_zone_rect.size.h - 2 * card_zone_inset.h)
+        )
+        card_center = {
+            0: Point(card_zone_contour.midX, card_zone_contour.maxY),
+            1: Point(card_zone_contour.maxX, card_zone_contour.midY),
+            2: Point(card_zone_contour.midX, card_zone_contour.minY),
+            3: Point(card_zone_contour.minX, card_zone_contour.midY),
+        }
+
+        for idx in range(4):
+            card = proxy.cards[idx]
+
+            if card is "":
+                continue
+
+            card_texture = self._card_texture(card)
+            card_texture = pygame.transform.scale(card_texture,
+                (card_size.w, card_size.h))
+
+            card_origin = Point(
+                card_center[idx].x - card_size.w / 2,
+                card_center[idx].y - card_size.h / 2)
+
+            self._win.blit(card_texture,
+                (card_origin.x, card_origin.y))
+
+
         # Player names
         player_names_inset = Size(50, 20)
         player_names_contour = Rect(
@@ -161,8 +198,8 @@ class GUI:
                 card_zone_rect.minX + player_names_inset.w,
                 card_zone_rect.minY + player_names_inset.h),
             Size(
-                card_zone_rect.size.w - 2*player_names_inset.w,
-                card_zone_rect.size.h - 2*player_names_inset.h)
+                card_zone_rect.size.w - 2 * player_names_inset.w,
+                card_zone_rect.size.h - 2 * player_names_inset.h)
         )
         player_name_center = {
             0: Point(player_names_contour.midX, player_names_contour.maxY),
@@ -173,10 +210,15 @@ class GUI:
 
         for idx in range(4):
             player_name = proxy.players[idx]
+
+            # Add an indicator if this is the current "first" player
+            if idx == self._game.starting_player:
+                player_name = '• {} •'.format(player_name)
+
             player_text = font.render(player_name, 1, (255, 255, 255))
             player_text_origin = Point(
-                player_name_center[idx].x - player_text.get_width()/2,
-                player_name_center[idx].y - player_text.get_height()/2)
+                player_name_center[idx].x - player_text.get_width() / 2,
+                player_name_center[idx].y - player_text.get_height() / 2)
 
             self._win.blit(player_text,
                 (player_text_origin.x, player_text_origin.y))

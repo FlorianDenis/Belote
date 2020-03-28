@@ -103,6 +103,27 @@ class Game:
         self.on_status_changed()
 
 
+    def play_card(self, player, card):
+        if self.state != Game.State.ONGOING:
+            log.error("Invalid state to play card")
+            return
+
+        current_player_idx = (self._starting_player + len(self._cards)) % 4
+        if player is not self._players[current_player_idx]:
+            log.error("Not player's turn")
+            return
+
+        hand = self._hands[player]
+        if not card in hand:
+            log.error("Trying to play card not in player's hand")
+            return
+
+        self._hands[player].remove(card)
+        self._cards.append(card)
+
+        self.on_status_changed()
+
+
     def _reset_round(self):
         self._cards = []
         self._hands = {}
@@ -175,7 +196,7 @@ class Game:
         proxy._hand.sort(key=lambda x: all_cards.index(x))
 
 
-        proxy._starting_player = self._starting_player
+        proxy._starting_player = idx_permutation.index(self._starting_player)
 
         return proxy
 
@@ -208,6 +229,15 @@ class GameProxy:
     def hand(self):
         return self._hand
 
+
+    @property
+    def starting_player(self):
+        return self._starting_player
+
+
+    @property
+    def cards(self):
+        return self._cards
 
 
     def to_args(self):
