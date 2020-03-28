@@ -25,7 +25,7 @@ class Server:
         def __init__ (self, addr, transport):
             self.addr       = addr
             self.transport  = transport
-            self.player     = player.Player()
+            self.player     = None
 
 
     def __init__(self, port):
@@ -96,9 +96,23 @@ class Server:
             trans.run()
 
 
+    def _handle_command(self, link, rx_cmd):
+
+        if rx_cmd.opcode == constants.CommandOpcode.CREATE_PLAYER:
+            # Add a new player to current game
+            if link.player == None and not self._game.is_full:
+                link.player = player.Player(rx_cmd.args[0], rx_cmd.args[1])
+                self._game.add_player(link.player)
+
+
     def __recv(self, transport, rx_packet):
-        # TODO: Handle incoming packet
-        pass
+
+        link = self.__lookup_link(transport=transport)
+        if rx_packet.msg_type == constants.MessageType.COMMAND:
+            self._handle_command(link, rx_packet)
+            return
+
+        log.warn("Unhandled packet: {}", str(rx_packet))
 
 
     def __drop(self, transport):
@@ -110,10 +124,18 @@ class Server:
 
         # Remove the link from the array
         self._links.remove(link)
+        if link.player:
+            self._game.remove_player(link.player)
 
         link.transport.stop()
 
 
     def __broadcast_game_status(self):
-        # TODO
-        pass
+        # Generate a proxy tailored to each client and send
+        for link in self._links:
+            proxy = self._game.proxy_for_player(link.player)
+            tx_packet = packet.Packet(
+                constants.MessageType.NOTIF,
+                constants.NotifOpcode.GAME_STATUS,
+                *proxy.to_args())
+            link.transport.send(tx_packet)

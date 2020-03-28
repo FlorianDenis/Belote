@@ -18,6 +18,7 @@ from . import packet
 
 log = logging.getLogger(__name__)
 
+MESSAGE_SEP = b'\n'
 
 class Transport:
 
@@ -80,7 +81,7 @@ class Transport:
             if self._tx_queue.empty():
                 self._tx_queue_not_empty.clear()
 
-            tx_bytes = tx_packet.to_bytes()
+            tx_bytes = tx_packet.to_bytes() + MESSAGE_SEP
             self._sock.sendall(tx_bytes)
 
             log.debug("-->  {}".format(str(tx_packet)))
@@ -112,9 +113,9 @@ class Transport:
             # We might read several packets at once, let's separate
             while len(rx_bytes):
 
-                idx = rx_bytes.find(packet.MESSAGE_SEP)
+                idx = rx_bytes.find(MESSAGE_SEP)
 
-                rx_packet = packet.from_bytes(rx_bytes[:idx+1])
+                rx_packet = packet.from_bytes(rx_bytes[:idx])
                 log.debug("<--  {}".format(str(rx_packet)))
 
                 self.on_recv(self, rx_packet)

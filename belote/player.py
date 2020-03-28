@@ -7,10 +7,20 @@
 import random
 
 """
-A remote Player context
+A single Player context
 """
 class Player:
 
-    def __init__(self):
-        self.identifier = "{:x}".format(random.getrandbits(32))
-        self.name = None
+    @property
+    def name(self):
+        return self._name
+
+
+    @property
+    def identifier(self):
+        return self._identifier
+
+
+    def __init__(self, identifier, name):
+        self._identifier = identifier
+        self._name = name

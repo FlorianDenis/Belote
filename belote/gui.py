@@ -8,6 +8,9 @@ import logging
 import pygame
 import sys
 
+from . import game
+
+
 class GUI:
 
     def __init__(self):

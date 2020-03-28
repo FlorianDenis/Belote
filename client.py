@@ -21,7 +21,7 @@ def main():
 
     # Logging
     logging.basicConfig(format='%(name)16s - %(levelname)8s - %(message)s')
-    logging.getLogger('common').setLevel(logging.DEBUG)
+    logging.getLogger('belote').setLevel(logging.DEBUG)
     log = logging.getLogger('cli')
 
 
@@ -30,11 +30,13 @@ def main():
     parser.add_argument('host', help='Host location')
     parser.add_argument('-p', '--port', default=4242,
         help='Port')
+    parser.add_argument('-n', '--name', default=os.environ['USER'],
+        help='Player name')
 
     args = parser.parse_args()
 
     # Launch client instance
-    client = Client(args.host, int(args.port))
+    client = Client(args.host, int(args.port), args.name)
     client.run()
 
 

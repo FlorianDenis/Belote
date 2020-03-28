@@ -8,26 +8,27 @@
 Define a packet format (incoming and outgoing) between a client and a server
 
 The representation for our protocol is text-based (UTF-8 encoded)
-MSG_TYPE|ARG1|ARG2|ARG3|...\n
+MSG_TYPE|OPCODE|ARG1|ARG2|ARG3|...\n
 
 """
 
 MESSAGE_LEN_MAX = 256
-MESSAGE_SEP = b'\n'
 
 
 class Packet:
 
-    def __init__ (self, msg_type, *args):
+    def __init__ (self, msg_type, opcode, *args):
         self.msg_type = msg_type
+        self.opcode   = opcode
         self.args     = list(args)
 
 
     def __str__(self):
-        res =  str(self.msg_type) + '|'
+        res  = self.msg_type + '|'
+        res += self.opcode   + '|'
         for arg in self.args:
             res += arg + '|'
-        return res[:-1] + '\n'
+        return res[:-1]
 
 
     def __eq__(self, other):
@@ -41,15 +42,16 @@ class Packet:
 
 
 def from_bytes(buf):
-    l = buf[:MESSAGE_LEN_MAX].decode('utf-8', 'strict').split('\n')[0].split('|')
+    l = buf[:MESSAGE_LEN_MAX].decode('utf-8', 'strict').split('|')
 
-    if len(l) == 0:
+    if len(l) < 2:
         raise ValueError('packet.py: Invalid format')
 
     try:
         msg_type = str(l[0])
+        opcode   = str(l[1])
     except:
         raise ValueError('packet.py: Invalid format ==> msg_type ' + l[0])
 
-    args = l[1:]
-    return Packet(msg_type, *args)
+    args = l[2:]
+    return Packet(msg_type, opcode, *args)
