@@ -51,11 +51,12 @@ class Client:
         self._transport.on_drop = self.__drop
         self._transport.run()
 
+        # Create GUI
+        self._gui = gui.GUI()
+
         # Register a new player
         self._register()
 
-        # Create GUI
-        self._gui = gui.GUI()
         self._gui.run()
 
 
@@ -76,9 +77,8 @@ class Client:
             self._player.name)
 
 
-    def _handle_new_proxy(self, proxy):
-        # Update UI!
-        pass
+    def _handle_new_proxy(self, proxy):    
+        self._gui.set_game(proxy)
 
 
     def __recv(self, transport, rx_packet):

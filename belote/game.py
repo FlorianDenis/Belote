@@ -144,14 +144,37 @@ class Game:
             log.error("Attempting to generate a proxy for a player not in game")
             return None
 
+        # Create a permutation so that the requesting player is always index 0
+        player_index = self._players.index(player)
+        idx_permutation = [
+            (player_index + 0) % 4,
+            (player_index + 1) % 4,
+            (player_index + 2) % 4,
+            (player_index + 3) % 4
+        ]
+
+
         proxy = GameProxy()
 
         proxy._state = self.state
-        proxy._players = [player.name for player in self._players]
-        proxy._cards = self._cards
+
+        proxy._players = [
+            self._players[idx].name if idx < len(self._players) else ""
+                for idx in idx_permutation
+        ]
+
+        proxy._cards = [
+            self._cards[idx] if idx < len(self._cards) else ""
+                for idx in idx_permutation
+        ]
+
         proxy._hand = self._hands[player] if player in self._hands else []
+        # Sort by order
+        all_cards = [card.value for card in constants.Card] + ['']
+        proxy._hand.sort(key=lambda x: all_cards.index(x))
+
+
         proxy._starting_player = self._starting_player
-        proxy._round_ongoing = self._round_ongoing
 
         return proxy
 
@@ -170,16 +193,29 @@ class GameProxy:
         self._hand = []
 
 
+    @property
+    def state(self):
+        return self._state
+
+
+    @property
+    def players(self):
+        return self._players
+
+
+    @property
+    def hand(self):
+        return self._hand
+
+
+
     def to_args(self):
         args = []
 
         args.append(self._state)
         args.append(str(self._starting_player))
 
-        args.append(str(len(self._players)))
         args += self._players
-
-        args.append(str(len(self._cards)))
         args += self._cards
 
         args.append(str(len(self._hand)))
@@ -201,15 +237,11 @@ def from_args(args):
     proxy._starting_player = int(args[idx])
     idx += 1
 
-    player_count = int(args[idx])
-    idx += 1
-    proxy._players = args[idx: idx+player_count]
-    idx += player_count
+    proxy._players = args[idx: idx+4]
+    idx += 4
 
-    cards_count = int(args[idx])
-    idx += 1
-    proxy._cards = args[idx: idx+cards_count]
-    idx += cards_count
+    proxy._cards = args[idx: idx+4]
+    idx += 4
 
     hand_count = int(args[idx])
     idx += 1
