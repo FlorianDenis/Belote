@@ -6,6 +6,7 @@
 
 import logging
 import random
+import threading
 
 from enum import Enum
 
@@ -118,9 +119,22 @@ class Game:
             log.error("Trying to play card not in player's hand")
             return
 
+        if len(self._cards) == 4:
+            log.error("Pli already completed")
+            return
+
         self._hands[player].remove(card)
         self._cards.append(card)
 
+        if len(self._cards) == 4:
+            # Hand completed, will reset the pli in 2 seconds
+            threading.Timer(2, self._reset_pli).start()
+
+        self.on_status_changed()
+
+
+    def _reset_pli(self):
+        self._cards = []
         self.on_status_changed()
 
 
