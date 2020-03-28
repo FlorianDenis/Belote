@@ -5,8 +5,11 @@
 #
 
 import logging
+import random
 
 from enum import Enum
+
+from . import constants
 
 
 log = logging.getLogger(__name__)
@@ -47,12 +50,56 @@ class Game:
         return Game.State.ONGOING
 
 
+    @property
+    def round_ordered_players(self):
+        return [self._players[idx % 4] for idx in range(
+            self._starting_player, self._starting_player + 4)]
+
+
+    @property
+    def card_deck(self):
+        # TODO: This should be tracked from one game to the other,
+        # not randomized at each new round
+        all_cards = [card.value for card in constants.Card]
+        random.shuffle(all_cards)
+        return all_cards
+
+
+    def _deal(self, deck):
+
+        ordered_players = self.round_ordered_players
+
+        idx = 0
+        dealt = {}
+
+        # 3
+        for i in range(4):
+            dealt[ordered_players[i]] = deck[idx:idx+3]
+            idx += 3
+
+        # 2
+        for i in range(4):
+            dealt[ordered_players[i]] += deck[idx:idx+2]
+            idx += 2
+
+        # 3
+        for i in range(4):
+            dealt[ordered_players[i]] += deck[idx:idx+3]
+            idx += 3
+
+        return dealt
+
+
     def start_round(self):
         if self.state != Game.State.READY_TO_START:
             log.error("Invalid state to start new round")
             return
 
         self._round_ongoing = True
+        self._cards = []
+
+        self._hands = self._deal(self.card_deck)
+
         self.on_status_changed()
 
 
@@ -72,7 +119,10 @@ class Game:
 
         self._players.append(player)
 
-        self.on_status_changed()
+        if self.state is Game.State.READY_TO_START:
+            self.start_round()
+        else:
+            self.on_status_changed()
 
 
     def remove_player(self, player):
