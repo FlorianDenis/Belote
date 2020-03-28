@@ -6,14 +6,23 @@
 
 import logging
 
+from enum import Enum
+
 
 log = logging.getLogger(__name__)
+
 
 """
 Full game context holding the state of the current game for the server side
 Contains all the logic to advance the game to next level
 """
 class Game:
+
+    State = Enum('State', [(a, a) for a in (
+        'WAITING_FOR_PLAYERS',
+        'READY_TO_START',
+        'ONGOING'
+    )], type=str)
 
 
     def __init__(self):
@@ -30,18 +39,21 @@ class Game:
 
 
     @property
-    def is_full(self):
-        return len(self._players) == 4
+    def state(self):
+        if len(self._players) < 4:
+            return Game.State.WAITING_FOR_PLAYERS
+        if not self._round_ongoing:
+            return Game.State.READY_TO_START
+        return Game.State.ONGOING
 
 
-    @property
-    def round_ongoing(self):
-        return self._round_ongoing
+    def start_round(self):
+        if self.state != Game.State.READY_TO_START:
+            log.error("Invalid state to start new round")
+            return
 
-
-    @property
-    def is_ready_to_start_round(self):
-        return self.is_full and not self.round_ongoing
+        self._round_ongoing = True
+        self.on_status_changed()
 
 
     def _reset_round(self):
@@ -54,7 +66,7 @@ class Game:
 
 
     def add_player(self, player):
-        if self.is_full:
+        if self.state != Game.State.WAITING_FOR_PLAYERS:
             log.error("Attempting to add player to already full game")
             return
 
@@ -70,11 +82,11 @@ class Game:
 
         self._players.remove(player)
 
-        if self.round_ongoing:
+        if self.state == Game.State.ONGOING:
             log.info("Player left while in a round: resetting")
             _reset_round()
-
-        self.on_status_changed()
+        else:
+            self.on_status_changed()
 
 
     def proxy_for_player(self, player):
@@ -84,6 +96,7 @@ class Game:
 
         proxy = GameProxy()
 
+        proxy._state = self.state
         proxy._players = [player.name for player in self._players]
         proxy._cards = self._cards
         proxy._hand = self._hands[player] if player in self._hands else []
@@ -100,15 +113,18 @@ and not game logic
 class GameProxy:
 
     def __init__(self):
+        self._state = None
+        self._starting_player = 0
         self._players = []
         self._cards = []
         self._hand = []
-        self._starting_player = 0
-        self._round_ongoing = False
 
 
     def to_args(self):
         args = []
+
+        args.append(self._state)
+        args.append(str(self._starting_player))
 
         args.append(str(len(self._players)))
         args += self._players
@@ -119,8 +135,6 @@ class GameProxy:
         args.append(str(len(self._hand)))
         args += self._hand
 
-        args.append(str(self._starting_player))
-        args.append(str(self._round_ongoing))
 
         return args
 
@@ -130,6 +144,12 @@ def from_args(args):
     proxy = GameProxy()
 
     idx = 0
+
+    proxy._state = args[idx]
+    idx += 1
+
+    proxy._starting_player = int(args[idx])
+    idx += 1
 
     player_count = int(args[idx])
     idx += 1
@@ -145,11 +165,5 @@ def from_args(args):
     idx += 1
     proxy._hand = args[idx: idx+hand_count]
     idx += hand_count
-
-    proxy._starting_player = int(args[idx])
-    idx += 1
-
-    proxy._round_ongoing = bool(args[idx])
-    idx += 1
 
     return proxy

@@ -100,7 +100,7 @@ class Server:
 
         if rx_cmd.opcode == constants.CommandOpcode.CREATE_PLAYER:
             # Add a new player to current game
-            if link.player == None and not self._game.is_full:
+            if link.player == None:
                 link.player = player.Player(rx_cmd.args[0], rx_cmd.args[1])
                 self._game.add_player(link.player)
 
