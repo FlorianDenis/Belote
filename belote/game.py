@@ -148,6 +148,9 @@ class Game:
         self._starting_player_pli = self._starting_player_round
         self._round_ongoing = False
 
+        for player in self._players:
+            player.set_ready(False)
+
         self.on_status_changed()
 
 
@@ -158,15 +161,32 @@ class Game:
 
         self._players.append(player)
 
-        if self.state is Game.State.READY_TO_START:
-            self.start_round()
-        else:
-            self.on_status_changed()
+        self.on_status_changed()
+
+
+    def set_player_ready(self, player):
+        if self.state != Game.State.READY_TO_START:
+            log.error("Attempting to set player ready while in invalid state")
+            return
+
+        if not player in self._players:
+            log.error("Attempting to set ready unknown player")
+            return
+
+        player.set_ready(True)
+
+        for player in self._players:
+            if not player.is_ready:
+                self.on_status_changed()
+                return
+
+        # Everyone ready: let's go
+        self.start_round()
 
 
     def remove_player(self, player):
         if not player in self._players:
-            log.error("Attempting to add player to already full game")
+            log.error("Attempting to remove unknown player")
             return
 
         state = self.state

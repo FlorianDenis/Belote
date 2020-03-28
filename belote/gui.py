@@ -27,6 +27,7 @@ class GUI:
         self._running = False
 
         # Callbacks
+        self.on_ready = None
         self.on_card_picked = None
 
         self._game = None
@@ -86,6 +87,10 @@ class GUI:
         toolbar = pygame.Surface((toolbar_rect.size.w, toolbar_rect.size.h))
         toolbar = toolbar.convert()
         toolbar.fill((100, 100, 100))
+
+        self._toolbar_rect = pygame.Rect(
+            toolbar_rect.minX, toolbar_rect.minY,
+            toolbar_rect.size.w, toolbar_rect.size.h)
 
         self._win.blit(toolbar, (toolbar_rect.origin.x, toolbar_rect.origin.y))
 
@@ -234,3 +239,8 @@ class GUI:
                 card_idx = self._card_rects.index(card)
                 self.on_card_picked(self._game.hand[card_idx])
                 return
+
+        # Clicked ready ? (or the whole toolbar for that matter...)
+        if self._toolbar_rect.collidepoint(pygame.mouse.get_pos()):
+            self.on_ready()
+            return

@@ -54,6 +54,7 @@ class Client:
         # Create GUI
         self._gui = gui.GUI()
         self._gui.on_card_picked = self._play_card
+        self._gui.on_ready = self._ready
 
         # Register as a new player
         self._register()
@@ -76,6 +77,10 @@ class Client:
             constants.CommandOpcode.CREATE_PLAYER,
             self._player.identifier,
             self._player.name)
+
+
+    def _ready(self):
+        self._perform(constants.CommandOpcode.PLAYER_READY)
 
 
     def _play_card(self, card):

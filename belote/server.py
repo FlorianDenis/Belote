@@ -98,12 +98,20 @@ class Server:
 
     def _handle_command(self, link, rx_cmd):
 
+        # Create a new player for current game
         if rx_cmd.opcode == constants.CommandOpcode.CREATE_PLAYER:
             # Add a new player to current game
             if link.player is None:
                 link.player = player.Player(rx_cmd.args[0], rx_cmd.args[1])
                 self._game.add_player(link.player)
 
+        # Set player as ready
+        if rx_cmd.opcode == constants.CommandOpcode.PLAYER_READY:
+            if link.player is None:
+                return
+            self._game.set_player_ready(link.player)
+
+        # Player plays a given card
         if rx_cmd.opcode == constants.CommandOpcode.PLAY_CARD:
             if link.player is None:
                 return
