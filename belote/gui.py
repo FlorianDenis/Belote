@@ -231,6 +231,17 @@ class GUI:
             self._win.blit(player_text,
                 (player_text_origin.x, player_text_origin.y))
 
+        # Current Trump suit
+        if proxy.trump_suit is not "":
+            trump_rect = Rect(Point(10, 10), Size(30, 30))
+            trump_texture = self._card_texture(proxy.trump_suit)
+            trump_texture = pygame.transform.scale(trump_texture,
+                (trump_rect.size.w, trump_rect.size.h))
+
+            self._win.blit(trump_texture,
+                (trump_rect.origin.x, trump_rect.origin.y))
+
+
         # Trump selection if necessary
         self._trump_rects = []
         if (proxy.state == game.Game.State.ANNOUNCING

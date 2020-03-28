@@ -184,6 +184,7 @@ class Game:
         self._starting_player_round = (self._starting_player_round + 1) % 4
         self._starting_player_pli = self._starting_player_round
         self._round_ongoing = False
+        self._trump_suit = None
 
         for player in self._players:
             player.set_ready(False)
@@ -239,6 +240,7 @@ class Game:
         proxy = GameProxy()
 
         proxy._state = self.state
+        proxy._trump_suit = self._trump_suit
 
         proxy._players = [
             self._players[idx].name if idx < len(self._players) else ""
@@ -271,6 +273,7 @@ class GameProxy:
 
     def __init__(self):
         self._state = None
+        self._trump_suit = None
         self._starting_player = 0
         self._players = []
         self._cards = []
@@ -280,6 +283,11 @@ class GameProxy:
     @property
     def state(self):
         return self._state
+
+
+    @property
+    def trump_suit(self):
+        return self._trump_suit
 
 
     @property
@@ -306,6 +314,7 @@ class GameProxy:
         args = []
 
         args.append(self._state)
+        args.append(self._trump_suit if self._trump_suit else "")
         args.append(str(self._starting_player))
 
         args += self._players
@@ -325,6 +334,9 @@ def from_args(args):
     idx = 0
 
     proxy._state = args[idx]
+    idx += 1
+
+    proxy._trump_suit = args[idx]
     idx += 1
 
     proxy._starting_player = int(args[idx])
