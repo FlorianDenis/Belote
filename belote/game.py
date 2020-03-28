@@ -32,7 +32,7 @@ class Game:
     def __init__(self):
         # Local context
         self._players = []
-        self._cards = []
+        self._cards = {}
         self._hands = {}
         self._starting_player_round = 0
         self._starting_player_pli = 0
@@ -98,8 +98,6 @@ class Game:
             return
 
         self._round_ongoing = True
-        self._cards = []
-
         self._hands = self._deal(self.card_deck)
 
         self.on_status_changed()
@@ -120,12 +118,12 @@ class Game:
             log.error("Trying to play card not in player's hand")
             return
 
-        if len(self._cards) == 4:
-            log.error("Pli already completed")
+        if player in self._cards:
+            log.error("Player already played")
             return
 
         self._hands[player].remove(card)
-        self._cards.append(card)
+        self._cards[player] = card
 
         if len(self._cards) == 4:
             # Hand completed, will reset the pli in 2 seconds
@@ -135,7 +133,7 @@ class Game:
 
 
     def _reset_pli(self):
-        self._cards = []
+        self._cards = {}
 
         # TODO: Not the next one, but the one who got the previous round
         self._starting_player_pli = (self._starting_player_pli + 1) % 4
@@ -144,7 +142,7 @@ class Game:
 
 
     def _reset_round(self):
-        self._cards = []
+        self._cards = {}
         self._hands = {}
         self._starting_player_round = (self._starting_player_round + 1) % 4
         self._starting_player_pli = self._starting_player_round
@@ -206,7 +204,9 @@ class Game:
         ]
 
         proxy._cards = [
-            self._cards[idx] if idx < len(self._cards) else ""
+            self._cards[self._players[idx]]
+                if idx < len(self._players) and self._players[idx] in self._cards
+                    else ""
                 for idx in idx_permutation
         ]
 
