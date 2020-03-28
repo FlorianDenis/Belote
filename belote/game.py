@@ -130,11 +130,12 @@ class Game:
             log.error("Attempting to add player to already full game")
             return
 
+        state = self.state
         self._players.remove(player)
 
-        if self.state == Game.State.ONGOING:
+        if state == Game.State.ONGOING:
             log.info("Player left while in a round: resetting")
-            _reset_round()
+            self._reset_round()
         else:
             self.on_status_changed()
 
