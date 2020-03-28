@@ -39,6 +39,7 @@ class Game:
         self._hands = {}
         self._starting_player_round = 0
         self._starting_player_pli = 0
+        self._plis = [[], []]
 
         self._trump_suit = None
         self._round_ongoing = False
@@ -174,24 +175,32 @@ class Game:
     def _finish_pli(self):
 
         # Find out who won it
-        ordered_players = [self._players[idx % 4] for idx in range(
-            self._starting_player_pli, self._starting_player_pli + 4)]
+        ordered_players_idx = [
+            (self._starting_player_pli + 0) % 4,
+            (self._starting_player_pli + 1) % 4,
+            (self._starting_player_pli + 2) % 4,
+            (self._starting_player_pli + 3) % 4,
+        ]
 
+        overtaking_card = None
+        overtaking_player_idx = None
+        for idx in ordered_players_idx:
+            played_card = self._cards[self._players[idx]]
+            if played_card.overtakes(overtaking_card, self._trump_suit):
+                overtaking_card = played_card
+                overtaking_player_idx = idx
 
-
-
+        self._plis[overtaking_player_idx % 2].append(self._cards.values())
         self._cards = {}
-
-        # TODO: Not the next one, but the one who got the previous round
-        self._starting_player_pli = (self._starting_player_pli + 1) % 4
+        self._starting_player_pli = overtaking_player_idx
 
         self.on_status_changed()
-
 
 
     def _reset_round(self):
         self._cards = {}
         self._hands = {}
+        self._plis = [[], []]
         self._starting_player_round = (self._starting_player_round + 1) % 4
         self._starting_player_pli = self._starting_player_round
         self._round_ongoing = False

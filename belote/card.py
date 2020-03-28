@@ -33,16 +33,36 @@ class Card():
 
 
     def sort_value(self, trump_suit):
-        is_trump = (trump_suit == self._suit)
 
         # Global order of each suit within one's game
         suit_order = ['H', 'C', 'D', 'S']
 
         # Order within the suit, depending if we are trump
-        value_order = (Card.trump_value_order if is_trump
+        value_order = (Card.trump_value_order if (trump_suit == self._suit)
             else Card.regular_value_order)
 
         return suit_order.index(self._suit) * 10 + value_order.index(self._value)
+
+
+    def overtakes(self, other, trump_suit):
+        if other is None:
+            return True
+
+        is_trump = (trump_suit == self._suit)
+        other_trump = (trump_suit == other._suit)
+
+        # The trump always wins against anything else
+        if is_trump != other_trump:
+            return is_trump
+
+        # Are we the right suit ?
+        if self._suit != other._suit:
+            return False
+
+        value_order = (Card.trump_value_order if is_trump
+            else Card.regular_value_order)
+
+        return value_order.index(self._value) < value_order.index(other._value)
 
 
 
