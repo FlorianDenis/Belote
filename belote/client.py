@@ -7,7 +7,7 @@
 import logging
 import random
 import socket
-import sys
+import os
 
 from . import constants
 from . import packet
@@ -43,7 +43,7 @@ class Client:
             log.error("Unable to establish connection to server {}:{}"
                 .format(self._host, self._port))
             sock.close()
-            sys.exit(1)
+            os._exit(0)
 
         # Create transport
         self._transport = transport.Transport(sock)
@@ -66,7 +66,7 @@ class Client:
 
     def __drop(self, transport):
         log.error("Connection dropped with server")
-        sys.exit(1)
+        os._exit(0)
 
 
     def _register(self):
