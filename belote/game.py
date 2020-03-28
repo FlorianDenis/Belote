@@ -125,7 +125,11 @@ class Game:
         self._hands[player].remove(card)
         self._cards[player] = card
 
-        if len(self._cards) == 4:
+        if len(self._cards) == 4 and len(self._hands[player]) == 0:
+            # Round completed, will terminate the round in 2 seconds
+            threading.Timer(2, self._finish_round).start()
+
+        elif len(self._cards) == 4:
             # Hand completed, will reset the pli in 2 seconds
             threading.Timer(2, self._reset_pli).start()
 
@@ -152,6 +156,11 @@ class Game:
             player.set_ready(False)
 
         self.on_status_changed()
+
+
+    def _finish_round(self):
+        # TODO: count points, display them, cut deck for next
+        self._reset_round()
 
 
     def add_player(self, player):
