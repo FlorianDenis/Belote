@@ -25,6 +25,7 @@ class Game:
     State = Enum('State', [(a, a) for a in (
         'WAITING_FOR_PLAYERS',
         'READY_TO_START',
+        'ANNOUNCING',
         'ONGOING'
     )], type=str)
 
@@ -37,6 +38,7 @@ class Game:
         self._starting_player_round = 0
         self._starting_player_pli = 0
 
+        self._trump_suit = None
         self._round_ongoing = False
 
         # Callback
@@ -49,13 +51,9 @@ class Game:
             return Game.State.WAITING_FOR_PLAYERS
         if not self._round_ongoing:
             return Game.State.READY_TO_START
+        if self._trump_suit == None:
+            return Game.State.ANNOUNCING
         return Game.State.ONGOING
-
-
-    @property
-    def round_ordered_players(self):
-        return [self._players[idx % 4] for idx in range(
-            self._starting_player_round, self._starting_player_round + 4)]
 
 
     @property
@@ -69,7 +67,8 @@ class Game:
 
     def _deal(self, deck):
 
-        ordered_players = self.round_ordered_players
+        ordered_players = [self._players[idx % 4] for idx in range(
+            self._starting_player_round, self._starting_player_round + 4)]
 
         idx = 0
         dealt = {}
@@ -92,7 +91,7 @@ class Game:
         return dealt
 
 
-    def start_round(self):
+    def _start_round(self):
         if self.state != Game.State.READY_TO_START:
             log.error("Invalid state to start new round")
             return
@@ -100,6 +99,40 @@ class Game:
         self._round_ongoing = True
         self._hands = self._deal(self.card_deck)
 
+        self.on_status_changed()
+
+
+    def set_player_ready(self, player):
+        if self.state != Game.State.READY_TO_START:
+            log.error("Attempting to set player ready while in invalid state")
+            return
+
+        if not player in self._players:
+            log.error("Attempting to set ready unknown player")
+            return
+
+        player.set_ready(True)
+
+        for player in self._players:
+            if not player.is_ready:
+                self.on_status_changed()
+                return
+
+        # Everyone ready: let's go
+        self._start_round()
+
+
+
+    def pick_trump(self, player, suit):
+        if self.state != Game.State.ANNOUNCING:
+            log.error("Can only pick the trump suit while announcing")
+            return
+
+        if not player is self._players[self._starting_player_round]:
+            log.error("Only the starting player shall select the trump suit")
+            return
+
+        self._trump_suit = suit
         self.on_status_changed()
 
 
@@ -173,26 +206,6 @@ class Game:
         self.on_status_changed()
 
 
-    def set_player_ready(self, player):
-        if self.state != Game.State.READY_TO_START:
-            log.error("Attempting to set player ready while in invalid state")
-            return
-
-        if not player in self._players:
-            log.error("Attempting to set ready unknown player")
-            return
-
-        player.set_ready(True)
-
-        for player in self._players:
-            if not player.is_ready:
-                self.on_status_changed()
-                return
-
-        # Everyone ready: let's go
-        self.start_round()
-
-
     def remove_player(self, player):
         if not player in self._players:
             log.error("Attempting to remove unknown player")
@@ -201,7 +214,7 @@ class Game:
         state = self.state
         self._players.remove(player)
 
-        if state == Game.State.ONGOING:
+        if self._round_ongoing:
             log.info("Player left while in a round: resetting")
             self._reset_round()
         else:

@@ -26,9 +26,18 @@ NotifOpcode = Enum('NotifOpcode', [(a, a) for a in (
 CommandOpcode = Enum('CommandOpcode', [(a, a) for a in (
     'CREATE_PLAYER',
     'PLAYER_READY',
+    'PICK_TRUMP',
     'PLAY_CARD',
 )], type=str)
 
+
+# All possible trump values
+Trump = Enum('Trump', [(a, a) for a in (
+    'H',
+    'C',
+    'D',
+    'S',
+)], type=str)
 
 # Code for the 32 cards.
 Card = Enum('Card', [(a, a) for a in (

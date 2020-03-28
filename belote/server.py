@@ -111,6 +111,12 @@ class Server:
                 return
             self._game.set_player_ready(link.player)
 
+        # Pick the trump color
+        if rx_cmd.opcode == constants.CommandOpcode.PICK_TRUMP:
+            if link.player is None:
+                return
+            self._game.pick_trump(link.player, rx_cmd.args[0])
+
         # Player plays a given card
         if rx_cmd.opcode == constants.CommandOpcode.PLAY_CARD:
             if link.player is None:

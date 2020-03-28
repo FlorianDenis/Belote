@@ -6,9 +6,9 @@
 
 import logging
 import pygame
-import sys
 import os
 
+from . import constants
 from . import game
 
 from . geometry import *
@@ -28,6 +28,7 @@ class GUI:
 
         # Callbacks
         self.on_ready = None
+        self.on_trump_picked = None
         self.on_card_picked = None
 
         self._game = None
@@ -52,6 +53,7 @@ class GUI:
                 if event.type == pygame.QUIT:
                     self._running = False
                     pygame.quit()
+                    os._exit(1)
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self._handle_click(event)
 
@@ -104,6 +106,7 @@ class GUI:
         status = {
             game.Game.State.WAITING_FOR_PLAYERS: "Waiting...",
             game.Game.State.READY_TO_START:      "Ready",
+            game.Game.State.ANNOUNCING:          "Announcing...",
             game.Game.State.ONGOING:              "",
         }
 
@@ -228,6 +231,31 @@ class GUI:
             self._win.blit(player_text,
                 (player_text_origin.x, player_text_origin.y))
 
+        # Trump selection if necessary
+        self._trump_rects = []
+        if (proxy.state == game.Game.State.ANNOUNCING
+            and proxy.starting_player == 0):
+
+            trumps = [trump.value for trump in constants.Trump]
+
+            for idx in range(len(trumps)):
+                suit_size = Size(150, 150)
+                suit_texture = self._card_texture(trumps[idx])
+                suit_texture = pygame.transform.scale(suit_texture,
+                    (suit_size.w, suit_size.h))
+
+                suit_origin = Point(
+                    card_center[idx].x - suit_size.w / 2,
+                    card_center[idx].y - suit_size.h / 2)
+
+                self._trump_rects.append(pygame.Rect(
+                    suit_origin.x, suit_origin.y,
+                    suit_size.w, suit_size.w
+                ))
+
+                self._win.blit(suit_texture,
+                    (suit_origin.x, suit_origin.y))
+
         pygame.display.update()
 
 
@@ -238,6 +266,14 @@ class GUI:
             if card.collidepoint(pygame.mouse.get_pos()):
                 card_idx = self._card_rects.index(card)
                 self.on_card_picked(self._game.hand[card_idx])
+                return
+
+        # Picked a trump
+        trumps = [trump.value for trump in constants.Trump]
+        for trump in self._trump_rects:
+            if trump.collidepoint(pygame.mouse.get_pos()):
+                trump_idx = self._trump_rects.index(trump)
+                self.on_trump_picked(trumps[trump_idx])
                 return
 
         # Clicked ready ? (or the whole toolbar for that matter...)
