@@ -34,7 +34,8 @@ class Game:
         self._players = []
         self._cards = []
         self._hands = {}
-        self._starting_player = 0
+        self._starting_player_round = 0
+        self._starting_player_pli = 0
 
         self._round_ongoing = False
 
@@ -54,7 +55,7 @@ class Game:
     @property
     def round_ordered_players(self):
         return [self._players[idx % 4] for idx in range(
-            self._starting_player, self._starting_player + 4)]
+            self._starting_player_round, self._starting_player_round + 4)]
 
 
     @property
@@ -109,7 +110,7 @@ class Game:
             log.error("Invalid state to play card")
             return
 
-        current_player_idx = (self._starting_player + len(self._cards)) % 4
+        current_player_idx = (self._starting_player_pli + len(self._cards)) % 4
         if player is not self._players[current_player_idx]:
             log.error("Not player's turn")
             return
@@ -135,13 +136,18 @@ class Game:
 
     def _reset_pli(self):
         self._cards = []
+
+        # TODO: Not the next one, but the one who got the previous round
+        self._starting_player_pli = (self._starting_player_pli + 1) % 4
+
         self.on_status_changed()
 
 
     def _reset_round(self):
         self._cards = []
         self._hands = {}
-        self._starting_player = (self._starting_player+ 1) % 4
+        self._starting_player_round = (self._starting_player_round + 1) % 4
+        self._starting_player_pli = self._starting_player_round
         self._round_ongoing = False
 
         self.on_status_changed()
@@ -210,7 +216,7 @@ class Game:
         proxy._hand.sort(key=lambda x: all_cards.index(x))
 
 
-        proxy._starting_player = idx_permutation.index(self._starting_player)
+        proxy._starting_player = idx_permutation.index(self._starting_player_pli)
 
         return proxy
 
