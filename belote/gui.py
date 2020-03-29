@@ -31,6 +31,11 @@ class GUI:
         self.on_trump_picked = None
         self.on_card_picked = None
 
+        # Position information for collision detection
+        self._toolbar_rect = pygame.Rect(0, 0, 0, 0)
+        self._card_rects = []
+        self._trump_rects = []
+
         self._game = None
 
         pygame.display.set_caption("Belote")
