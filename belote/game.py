@@ -40,7 +40,7 @@ class Game:
         self._hands = {}
 
         # Map player -> card played (currently on the table)
-        self._cards = {}
+        self._current_pli = {}
 
         # Who started the current round, and the current pli
         self._starting_player_round = 0
@@ -159,7 +159,8 @@ class Game:
             log.error("Invalid state to play card")
             return
 
-        current_player_idx = (self._starting_player_pli + len(self._cards)) % 4
+        current_player_idx = (
+            self._starting_player_pli + len(self._current_pli)) % 4
         if player is not self._players[current_player_idx]:
             log.error("Not player's turn")
             return
@@ -169,18 +170,18 @@ class Game:
             log.error("Trying to play card not in player's hand")
             return
 
-        if player in self._cards:
+        if player in self._current_pli:
             log.error("Player already played")
             return
 
         self._hands[player].remove(card)
-        self._cards[player] = card
+        self._current_pli[player] = card
 
-        if len(self._cards) == 4 and len(self._hands[player]) == 0:
+        if len(self._current_pli) == 4 and len(self._hands[player]) == 0:
             # Round completed, will terminate the round in 2 seconds
             threading.Timer(2, self._finish_round).start()
 
-        elif len(self._cards) == 4:
+        elif len(self._current_pli) == 4:
             # Hand completed, will reset the pli in 2 seconds
             threading.Timer(2, self._finish_pli).start()
 
@@ -200,7 +201,7 @@ class Game:
         overtaking_card = None
         overtaking_player_idx = None
         for idx in ordered_players_idx:
-            played_card = self._cards[self._players[idx]]
+            played_card = self._current_pli[self._players[idx]]
             if played_card.overtakes(overtaking_card, self._trump_suit):
                 overtaking_card = played_card
                 overtaking_player_idx = idx
@@ -208,20 +209,20 @@ class Game:
         overtaking_player = self._players[overtaking_player_idx]
         is_last_pli = len(self._hands[overtaking_player]) == 0
 
-        pli = self._cards.values()
+        pli = self._current_pli.values()
         points = sum([card.point_value(self._trump_suit) for card in pli]) + (
             10 if is_last_pli else 0)
 
         self._plis[overtaking_player_idx % 2] += pli
         self._points[overtaking_player_idx % 2] += points
-        self._cards = {}
+        self._current_pli = {}
         self._starting_player_pli = overtaking_player_idx
 
         self.on_status_changed()
 
 
     def _reset_round(self):
-        self._cards = {}
+        self._current_pli = {}
         self._hands = {}
         self._plis = [[], []]
         self._starting_player_round = (self._starting_player_round + 1) % 4
@@ -301,9 +302,9 @@ class Game:
                 for idx in idx_permutation
         ]
 
-        proxy._cards = [
-            self._cards[self._players[idx]]
-                if idx < len(self._players) and self._players[idx] in self._cards
+        proxy._current_pli = [
+            self._current_pli[self._players[idx]]
+                if idx < len(self._players) and self._players[idx] in self._current_pli
                     else card.Card("")
                 for idx in idx_permutation
         ]
@@ -327,7 +328,7 @@ class GameProxy:
         self._player_points = 0
         self._enemy_points = 0
         self._players = []
-        self._cards = []
+        self._current_pli = []
         self._hand = []
 
 
@@ -357,8 +358,8 @@ class GameProxy:
 
 
     @property
-    def cards(self):
-        return self._cards
+    def current_pli(self):
+        return self._current_pli
 
 
     @property
@@ -381,7 +382,7 @@ class GameProxy:
         args.append(str(self._starting_player))
 
         args += self._players
-        args += [card.code for card in self._cards]
+        args += [card.code for card in self._current_pli]
 
         args.append(str(len(self._hand)))
         args += [card.code for card in self._hand]
@@ -413,7 +414,7 @@ def from_args(args):
     proxy._players = args[idx: idx+4]
     idx += 4
 
-    proxy._cards = [card.Card(code) for code in args[idx: idx+4]]
+    proxy._current_pli = [card.Card(code) for code in args[idx: idx+4]]
     idx += 4
 
     hand_count = int(args[idx])

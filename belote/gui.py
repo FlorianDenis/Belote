@@ -175,7 +175,7 @@ class GUI:
             self._win.blit(card_texture,
                 (card_position.origin.x, card_position.origin.y))
 
-        # Cards
+        # Current pli
         card_zone_rect = Rect(
             origin = game_area.origin,
             size = Size(game_area.width, game_area.height - hand_zone_height))
@@ -189,7 +189,7 @@ class GUI:
         }
 
         for idx in range(4):
-            card = proxy.cards[idx]
+            card = proxy.current_pli[idx]
 
             if not card.code:
                 continue
