@@ -154,6 +154,8 @@ class Server:
         # Generate a proxy tailored to each client and send
         for link in self._links:
             proxy = self._game.proxy_for_player(link.player)
+            if not proxy:
+                continue
             tx_packet = packet.Packet(
                 constants.MessageType.NOTIF,
                 constants.NotifOpcode.GAME_STATUS,
