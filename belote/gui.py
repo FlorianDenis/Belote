@@ -118,6 +118,17 @@ class GUI:
         self._win.blit(status_text, (status_origin.x, status_origin.y))
 
 
+        # Points
+        points = "us: {} - them: {}".format(
+            proxy.player_points, proxy.enemy_points)
+        points_text = font.render(points, 1, (255, 255, 255))
+        points_origin = Point(
+            toolbar_rect.maxX - 30 - points_text.get_width(),
+            toolbar_rect.midY - points_text.get_height() / 2)
+
+        self._win.blit(points_text, (points_origin.x, points_origin.y))
+
+
         # Hand
         card_spacing = 30
         card_size = Size(130, 200)

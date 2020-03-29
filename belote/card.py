@@ -12,8 +12,30 @@ Allows for easy sorting (by color and by value, depending on trump suit)
 """
 class Card():
 
-    regular_value_order = ['A', '10', 'K', 'Q', 'J','9', '8', '7']
-    trump_value_order = ['J', '9', 'A', '10', 'K', 'Q', '8', '7']
+    regular_order = ['A', '10', 'K', 'Q', 'J', '9', '8', '7']
+    trump_order = ['J', '9', 'A', '10', 'K', 'Q', '8', '7']
+
+    regular_points = {
+         'A': 11,
+        '10': 10,
+         'K': 4,
+         'Q': 3,
+         'J': 2,
+         '9': 0,
+         '8': 0,
+         '7': 0,
+    }
+
+    trump_points = {
+         'J' : 20,
+         '9' : 14,
+         'A' : 11,
+        '10' : 10,
+         'K' : 4,
+         'Q' : 3,
+         '8' : 0,
+         '7' : 0,
+    }
 
     @property
     def code(self):
@@ -34,14 +56,24 @@ class Card():
 
     def sort_value(self, trump_suit):
 
+        is_trump = (trump_suit == self._suit)
+
         # Global order of each suit within one's game
         suit_order = ['H', 'C', 'D', 'S']
 
         # Order within the suit, depending if we are trump
-        value_order = (Card.trump_value_order if (trump_suit == self._suit)
-            else Card.regular_value_order)
+        value_order = (Card.trump_order if is_trump else Card.regular_order)
 
         return suit_order.index(self._suit) * 10 + value_order.index(self._value)
+
+
+    def point_value(self, trump_suit):
+
+        is_trump = (trump_suit == self._suit)
+
+        points =  (Card.trump_points if is_trump else Card.regular_points)
+
+        return float(points[self._value])
 
 
     def overtakes(self, other, trump_suit):
@@ -59,8 +91,7 @@ class Card():
         if self._suit != other._suit:
             return False
 
-        value_order = (Card.trump_value_order if is_trump
-            else Card.regular_value_order)
+        value_order = (Card.trump_order if is_trump else Card.regular_order)
 
         return value_order.index(self._value) < value_order.index(other._value)
 

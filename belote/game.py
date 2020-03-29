@@ -33,15 +33,29 @@ class Game:
 
 
     def __init__(self):
-        # Local context
+        # Array of joined-in players
         self._players = []
-        self._cards = {}
+
+        # Map player -> array of card in hand
         self._hands = {}
+
+        # Map player -> card played (currently on the table)
+        self._cards = {}
+
+        # Who started the current round, and the current pli
         self._starting_player_round = 0
         self._starting_player_pli = 0
-        self._plis = [[], []]
 
+        # By team (even/odd), won pli so far and point total
+        self._plis = [[], []]
+        self._points = [0.0, 0.0]
+
+        # Misc
         self._trump_suit = None
+
+        self._deck = card.all
+        random.shuffle(self._deck)
+
         self._round_ongoing = False
 
         # Callback
@@ -59,13 +73,9 @@ class Game:
         return Game.State.ONGOING
 
 
-    @property
-    def card_deck(self):
-        # TODO: This should be tracked from one game to the other,
-        # not randomized at each new round
-        all_cards = card.all
-        random.shuffle(all_cards)
-        return all_cards
+    def _cut(self, deck):
+        cut_idx = random.choice(range(len(deck)))
+        return deck[cut_idx:] + deck[:cut_idx]
 
 
     def _deal(self, deck):
@@ -100,7 +110,9 @@ class Game:
             return
 
         self._round_ongoing = True
-        self._hands = self._deal(self.card_deck)
+
+        self._deck = self._cut(self._deck)
+        self._hands = self._deal(self._deck)
 
         self.on_status_changed()
 
@@ -120,6 +132,9 @@ class Game:
             if not player.is_ready:
                 self.on_status_changed()
                 return
+
+        # Reset the score from the previous match
+        self._points = [0.0, 0.0]
 
         # Everyone ready: let's go
         self._start_round()
@@ -190,7 +205,15 @@ class Game:
                 overtaking_card = played_card
                 overtaking_player_idx = idx
 
-        self._plis[overtaking_player_idx % 2].append(self._cards.values())
+        overtaking_player = self._players[overtaking_player_idx]
+        is_last_pli = len(self._hands[overtaking_player]) == 0
+
+        pli = self._cards.values()
+        points = sum([card.point_value(self._trump_suit) for card in pli]) + (
+            10 if is_last_pli else 0)
+
+        self._plis[overtaking_player_idx % 2] += pli
+        self._points[overtaking_player_idx % 2] += points
         self._cards = {}
         self._starting_player_pli = overtaking_player_idx
 
@@ -213,7 +236,14 @@ class Game:
 
 
     def _finish_round(self):
-        # TODO: count points, display them, cut deck for next
+
+        # Finish the last pli
+        self._finish_pli()
+
+        # Reasssemble the deck
+        self._deck = self._plis[0] + self._plis[1]
+
+        # Clean current round
         self._reset_round()
 
 
@@ -261,6 +291,10 @@ class Game:
 
         proxy._state = self.state
         proxy._trump_suit = self._trump_suit
+        proxy._player_points = round(self._points[(player_index % 2)])
+        proxy._enemy_points  = round(self._points[(player_index + 1) % 2])
+
+        proxy._starting_player = idx_permutation.index(self._starting_player_pli)
 
         proxy._players = [
             self._players[idx].name if idx < len(self._players) else ""
@@ -277,8 +311,6 @@ class Game:
         proxy._hand = self._hands[player] if player in self._hands else []
         proxy._hand.sort(key=lambda x: x.sort_value(self._trump_suit))
 
-        proxy._starting_player = idx_permutation.index(self._starting_player_pli)
-
         return proxy
 
 
@@ -292,6 +324,8 @@ class GameProxy:
         self._state = None
         self._trump_suit = None
         self._starting_player = 0
+        self._player_points = 0
+        self._enemy_points = 0
         self._players = []
         self._cards = []
         self._hand = []
@@ -327,11 +361,23 @@ class GameProxy:
         return self._cards
 
 
+    @property
+    def player_points(self):
+        return self._player_points
+
+
+    @property
+    def enemy_points(self):
+        return self._enemy_points
+
+
     def to_args(self):
         args = []
 
         args.append(self._state)
         args.append(self._trump_suit if self._trump_suit else "")
+        args.append(str(self._player_points))
+        args.append(str(self._enemy_points))
         args.append(str(self._starting_player))
 
         args += self._players
@@ -353,6 +399,12 @@ def from_args(args):
     idx += 1
 
     proxy._trump_suit = args[idx]
+    idx += 1
+
+    proxy._player_points = int(args[idx])
+    idx += 1
+
+    proxy._enemy_points = int(args[idx])
     idx += 1
 
     proxy._starting_player = int(args[idx])
