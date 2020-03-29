@@ -195,7 +195,7 @@ class GUI:
         for idx in range(4):
             card = proxy.cards[idx]
 
-            if card.code is "":
+            if not card.code:
                 continue
 
             card_texture = self._card_texture(card.code)
@@ -243,7 +243,7 @@ class GUI:
                 (player_text_origin.x, player_text_origin.y))
 
         # Current Trump suit
-        if proxy.trump_suit is not "":
+        if proxy.trump_suit:
             trump_rect = Rect(Point(10, 10), Size(30, 30))
             trump_texture = self._card_texture(proxy.trump_suit)
             trump_texture = pygame.transform.scale(trump_texture,
