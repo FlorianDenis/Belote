@@ -75,19 +75,13 @@ class GUI:
     def _redraw(self, proxy):
 
         screen = Rect(
-            Point(0, 0),
-            Size(self._win.get_width(), self._win.get_height()))
+            origin = Point(0, 0),
+            size = Size(self._win.get_width(), self._win.get_height()))
 
-        game_area_size = Size(800, 800)
-        game_area = Rect(
-            Point(
-                screen.midX - game_area_size.w / 2,
-                screen.midY - game_area_size.h / 2),
-            game_area_size)
-
+        game_area = Rect(center = screen.center, size = Size(800, 800))
 
         # Background: solid green color over the wholes screen
-        background = pygame.Surface((screen.size.w, screen.size.h))
+        background = pygame.Surface((screen.width, screen.height))
         background = background.convert()
         background.fill((80, 150, 15))
 
@@ -96,16 +90,16 @@ class GUI:
         # Toolbar: bottom of the screen
         toolbar_height = 40
         toolbar_rect = Rect(
-            Point(screen.minX, screen.maxY - toolbar_height),
-            Size(screen.size.w, toolbar_height))
+            origin = Point(screen.min_x, screen.max_y - toolbar_height),
+            size = Size(screen.width, toolbar_height))
 
-        toolbar = pygame.Surface((toolbar_rect.size.w, toolbar_rect.size.h))
+        toolbar = pygame.Surface((toolbar_rect.width, toolbar_rect.height))
         toolbar = toolbar.convert()
         toolbar.fill((100, 100, 100))
 
         self._toolbar_rect = pygame.Rect(
-            toolbar_rect.minX, toolbar_rect.minY,
-            toolbar_rect.size.w, toolbar_rect.size.h)
+            toolbar_rect.min_x, toolbar_rect.min_y,
+            toolbar_rect.width, toolbar_rect.height)
 
         self._win.blit(toolbar, (toolbar_rect.origin.x, toolbar_rect.origin.y))
 
@@ -125,8 +119,8 @@ class GUI:
 
         status_text = font.render(status[proxy.state], 1, (255, 255, 255))
         status_origin = Point(
-            toolbar_rect.minX + 30,
-            toolbar_rect.midY - status_text.get_height()/2)
+            toolbar_rect.min_x + 30,
+            toolbar_rect.mid_y - status_text.get_height() / 2)
 
         self._win.blit(status_text, (status_origin.x, status_origin.y))
 
@@ -136,8 +130,8 @@ class GUI:
             proxy.player_points, proxy.enemy_points)
         points_text = font.render(points, 1, (255, 255, 255))
         points_origin = Point(
-            toolbar_rect.maxX - 30 - points_text.get_width(),
-            toolbar_rect.midY - points_text.get_height() / 2)
+            toolbar_rect.max_x - 30 - points_text.get_width(),
+            toolbar_rect.mid_y - points_text.get_height() / 2)
 
         self._win.blit(points_text, (points_origin.x, points_origin.y))
 
@@ -149,35 +143,32 @@ class GUI:
         num_cards_hand = len(proxy.hand)
 
         hand_zone_height = 200
-        hand_zone_width = (num_cards_hand-1) * card_spacing + card_size.w
+        hand_zone_width = (num_cards_hand-1) * card_spacing + card_size.width
 
         hand_zone_center = Point(
-            game_area.midX,
-            game_area.maxY - (hand_zone_height / 2))
+            game_area.mid_x,
+            game_area.max_y - (hand_zone_height / 2))
 
         hand_zone_rect = Rect(
-            Point(
-                hand_zone_center.x - hand_zone_width / 2,
-                hand_zone_center.y - hand_zone_height / 2),
-            Size(hand_zone_width, hand_zone_height))
-
+            center = hand_zone_center,
+            size = Size(hand_zone_width, hand_zone_height))
 
         self._card_rects = []
 
         for i in range(num_cards_hand):
             card_position = Rect(
-                Point(
-                    hand_zone_rect.minX + i * card_spacing,
-                    hand_zone_rect.minY),
-                card_size)
+                origin = Point(
+                    hand_zone_rect.min_x + i * card_spacing,
+                    hand_zone_rect.min_y),
+                size = card_size)
 
             card_texture = self._card_texture(proxy.hand[i].code)
             card_texture = pygame.transform.scale(card_texture,
-                (card_size.w, card_size.h))
+                (card_size.width, card_size.height))
 
             card_rect = pygame.Rect(
                 card_position.origin.x, card_position.origin.y,
-                card_size.w, card_size.h)
+                card_size.width, card_size.height)
 
             self._card_rects.append(card_rect)
 
@@ -186,23 +177,15 @@ class GUI:
 
         # Cards
         card_zone_rect = Rect(
-            Point(game_area.minX, game_area.minY),
-            Size(game_area.size.w, hand_zone_rect.minY - game_area.minY))
+            origin = game_area.origin,
+            size = Size(game_area.width, game_area.height - hand_zone_height))
 
-        card_zone_inset = Size(250, 150)
-        card_zone_contour = Rect(
-            Point(
-                card_zone_rect.minX + card_zone_inset.w,
-                card_zone_rect.minY + card_zone_inset.h),
-            Size(
-                card_zone_rect.size.w - 2 * card_zone_inset.w,
-                card_zone_rect.size.h - 2 * card_zone_inset.h)
-        )
+        card_zone_contour = card_zone_rect.inset_by(250, 150)
         card_center = {
-            0: Point(card_zone_contour.midX, card_zone_contour.maxY),
-            1: Point(card_zone_contour.maxX, card_zone_contour.midY),
-            2: Point(card_zone_contour.midX, card_zone_contour.minY),
-            3: Point(card_zone_contour.minX, card_zone_contour.midY),
+            0: card_zone_contour.center_bottom,
+            1: card_zone_contour.center_right,
+            2: card_zone_contour.center_top,
+            3: card_zone_contour.center_left,
         }
 
         for idx in range(4):
@@ -213,31 +196,21 @@ class GUI:
 
             card_texture = self._card_texture(card.code)
             card_texture = pygame.transform.scale(card_texture,
-                (card_size.w, card_size.h))
+                (card_size.width, card_size.height))
 
-            card_origin = Point(
-                card_center[idx].x - card_size.w / 2,
-                card_center[idx].y - card_size.h / 2)
+            card_rect = Rect(center = card_center[idx], size = card_size)
 
             self._win.blit(card_texture,
-                (card_origin.x, card_origin.y))
+                (card_rect.origin.x, card_rect.origin.y))
 
 
         # Player names
-        player_names_inset = Size(50, 20)
-        player_names_contour = Rect(
-            Point(
-                card_zone_rect.minX + player_names_inset.w,
-                card_zone_rect.minY + player_names_inset.h),
-            Size(
-                card_zone_rect.size.w - 2 * player_names_inset.w,
-                card_zone_rect.size.h - 2 * player_names_inset.h)
-        )
+        player_names_contour = card_zone_rect.inset_by(50, 20)
         player_name_center = {
-            0: Point(player_names_contour.midX, player_names_contour.maxY),
-            1: Point(player_names_contour.maxX, player_names_contour.midY),
-            2: Point(player_names_contour.midX, player_names_contour.minY),
-            3: Point(player_names_contour.minX, player_names_contour.midY),
+            0: player_names_contour.center_bottom,
+            1: player_names_contour.center_right,
+            2: player_names_contour.center_top,
+            3: player_names_contour.center_left,
         }
 
         for idx in range(4):
@@ -248,19 +221,19 @@ class GUI:
                 player_name = '• {} •'.format(player_name)
 
             player_text = font.render(player_name, 1, (255, 255, 255))
-            player_text_origin = Point(
-                player_name_center[idx].x - player_text.get_width() / 2,
-                player_name_center[idx].y - player_text.get_height() / 2)
+            player_text_rect = Rect(
+                center = player_name_center[idx],
+                size = Size(player_text.get_width(), player_text.get_height()))
 
             self._win.blit(player_text,
-                (player_text_origin.x, player_text_origin.y))
+                (player_text_rect.origin.x, player_text_rect.origin.y))
 
         # Current Trump suit
         if proxy.trump_suit:
-            trump_rect = Rect(Point(10, 10), Size(30, 30))
+            trump_rect = Rect(origin = Point(10, 10), size = Size(30, 30))
             trump_texture = self._card_texture(proxy.trump_suit)
             trump_texture = pygame.transform.scale(trump_texture,
-                (trump_rect.size.w, trump_rect.size.h))
+                (trump_rect.width, trump_rect.height))
 
             self._win.blit(trump_texture,
                 (trump_rect.origin.x, trump_rect.origin.y))
@@ -277,19 +250,17 @@ class GUI:
                 suit_size = Size(150, 150)
                 suit_texture = self._card_texture(trumps[idx])
                 suit_texture = pygame.transform.scale(suit_texture,
-                    (suit_size.w, suit_size.h))
+                    (suit_size.width, suit_size.height))
 
-                suit_origin = Point(
-                    card_center[idx].x - suit_size.w / 2,
-                    card_center[idx].y - suit_size.h / 2)
+                suit_rect = Rect(center = card_center[idx], size = suit_size)
 
                 self._trump_rects.append(pygame.Rect(
-                    suit_origin.x, suit_origin.y,
-                    suit_size.w, suit_size.w
+                    suit_rect.origin.x, suit_rect.origin.y,
+                    suit_rect.width, suit_rect.height
                 ))
 
                 self._win.blit(suit_texture,
-                    (suit_origin.x, suit_origin.y))
+                    (suit_rect.origin.x, suit_rect.origin.y))
 
         pygame.display.update()
 

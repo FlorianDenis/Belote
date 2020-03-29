@@ -25,6 +25,11 @@ class Point:
         return Point(self.x + other.x, self.y + other.y)
 
 
+    def __str__(self):
+        return "[x={}, y={}]".format(self._x, self._y)
+
+
+
 class Size:
 
     def __init__(self, w, h):
@@ -33,23 +38,55 @@ class Size:
 
 
     @property
-    def w(self):
+    def width(self):
         return self._w
 
 
     @property
-    def h(self):
+    def height(self):
         return self._h
+
+
+    def __str__(self):
+        return "[w={}, h={}]".format(self._w, self._h)
 
 
 
 class Rect:
 
-    def __init__(self, origin, size):
-        self._x = origin.x
-        self._y = origin.y
-        self._w = size.w
-        self._h = size.h
+    def __init__(self, origin=None, center=None, size=None):
+        if size is None:
+            raise ValueError()
+        if origin is None and center is None:
+            raise ValueError()
+        if origin is not None and center is not None:
+            raise ValueError()
+
+        if origin is not None:
+            self._x = origin.x
+            self._y = origin.y
+        else:
+            self._x = center.x - size.width / 2
+            self._y = center.y - size.height / 2
+
+        self._w = size.width
+        self._h = size.height
+
+
+    @property
+    def width(self):
+        return self._w
+
+
+    @property
+    def height(self):
+        return self._h
+
+
+    @property
+    def size(self):
+        return Size(self.width, self.height)
+
 
     @property
     def origin(self):
@@ -57,79 +94,85 @@ class Rect:
 
 
     @property
-    def size(self):
-        return Size(self._w, self._h)
-
-
-    @property
-    def minX(self):
+    def min_x(self):
         return self.origin.x
 
 
     @property
-    def minY(self):
+    def min_y(self):
         return self.origin.y
 
-    @property
-    def maxX(self):
-        return self.origin.x + self.size.w
-
 
     @property
-    def maxY(self):
-        return self.origin.y + self.size.h
+    def max_x(self):
+        return self.min_x + self.width
 
 
     @property
-    def midX(self):
-        return self.origin.x + self.size.w/2
+    def max_y(self):
+        return self.min_y + self.height
 
 
     @property
-    def midY(self):
-        return self.origin.y + self.size.h/2
+    def mid_x(self):
+        return self.min_x + self.width / 2
 
 
     @property
-    def topLeft(self):
-        return Point(minX, minY)
+    def mid_y(self):
+        return self.min_y + self.height / 2
 
 
     @property
-    def centerLeft(self):
-        return Point(minX, midY)
+    def top_left(self):
+        return Point(self.min_x, self.min_y)
 
 
     @property
-    def bottomLeft(self):
-        return Point(minX, maxY)
+    def center_left(self):
+        return Point(self.min_x, self.mid_y)
 
 
     @property
-    def topRight(self):
-        return Point(maxX, minY)
+    def bottom_left(self):
+        return Point(self.min_x, self.max_y)
 
 
     @property
-    def centerRight(self):
-        return Point(maxX, midY)
+    def top_right(self):
+        return Point(self.max_x, self.min_y)
 
 
     @property
-    def bottomRight(self):
-        return Point(maxX, maxY)
+    def center_right(self):
+        return Point(self.max_x, self.mid_y)
 
 
     @property
-    def centerTop(self):
-        return Point(midX, minY)
+    def bottom_right(self):
+        return Point(self.max_x, self.max_y)
+
+
+    @property
+    def center_top(self):
+        return Point(self.mid_x, self.min_y)
 
 
     @property
     def center(self):
-        return Point(midX, midY)
+        return Point(self.mid_x, self.mid_y)
 
 
     @property
-    def centerBottom(self):
-        return Point(midX, maxY)
+    def center_bottom(self):
+        return Point(self.mid_x, self.max_y)
+
+
+    def inset_by(self, dx, dy):
+        return Rect(
+            center = self.center,
+            size = Size(self.width - 2 * dx, self.height - 2 * dy))
+
+
+    def __str__(self):
+        return "[{}, {}]".format(self.origin, self.size)
