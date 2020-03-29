@@ -18,9 +18,7 @@ class GUI:
 
     def __init__(self):
         # Setup window
-        self._w = 800
-        self._h = 800
-        self._win = pygame.display.set_mode((self._w, self._h))
+        self._win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
         # GUI is not threaded, the runloop takes place in the main thread
         # This means run() won't return
@@ -72,18 +70,24 @@ class GUI:
 
     def _redraw(self, proxy):
 
-        screen = Rect(Point(0, 0), Size(self._w, self._h))
+        screen = Rect(
+            Point(0, 0),
+            Size(self._win.get_width(), self._win.get_height()))
 
-        # Background: solid green color
-        background_rect = screen
+        game_area_size = Size(800, 800)
+        game_area = Rect(
+            Point(
+                screen.midX - game_area_size.w / 2,
+                screen.midY - game_area_size.h / 2),
+            game_area_size)
 
-        background = pygame.Surface(
-            (background_rect.size.w, background_rect.size.h))
+
+        # Background: solid green color over the wholes screen
+        background = pygame.Surface((screen.size.w, screen.size.h))
         background = background.convert()
         background.fill((80, 150, 15))
 
-        self._win.blit(background,
-            (background_rect.origin.x, background_rect.origin.y))
+        self._win.blit(background, (screen.origin.x, screen.origin.y))
 
         # Toolbar: bottom of the screen
         toolbar_height = 40
@@ -144,8 +148,8 @@ class GUI:
         hand_zone_width = (num_cards_hand-1) * card_spacing + card_size.w
 
         hand_zone_center = Point(
-            screen.midX,
-            screen.maxY - toolbar_height - (hand_zone_height / 2))
+            game_area.midX,
+            game_area.maxY - (hand_zone_height / 2))
 
         hand_zone_rect = Rect(
             Point(
@@ -178,8 +182,8 @@ class GUI:
 
         # Cards
         card_zone_rect = Rect(
-            Point(screen.minX, screen.minY),
-            Size(screen.size.w, hand_zone_rect.minY - screen.minY))
+            Point(game_area.minX, game_area.minY),
+            Size(game_area.size.w, hand_zone_rect.minY - game_area.minY))
 
         card_zone_inset = Size(250, 150)
         card_zone_contour = Rect(
