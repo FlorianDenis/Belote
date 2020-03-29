@@ -16,9 +16,13 @@ from . geometry import *
 
 class GUI:
 
-    def __init__(self):
+    def __init__(self, windowed):
+
         # Setup window
-        self._win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        if windowed:
+            self._win = pygame.display.set_mode((840, 840))
+        else:
+            self._win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
         # GUI is not threaded, the runloop takes place in the main thread
         # This means run() won't return

@@ -30,13 +30,15 @@ def main():
     parser.add_argument('host', help='Host location')
     parser.add_argument('-p', '--port', default=4242,
         help='Port')
+    parser.add_argument('-w', '--windowed', action='store_true',
+        help='Windowed mode')
     parser.add_argument('-n', '--name', default=os.environ['USER'],
         help='Player name')
 
     args = parser.parse_args()
 
     # Launch client instance
-    client = Client(args.host, int(args.port), args.name)
+    client = Client(args.host, int(args.port), args.name, bool(args.windowed))
     client.run()
 
 

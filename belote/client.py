@@ -21,11 +21,12 @@ log = logging.getLogger(__name__)
 
 class Client:
 
-    def __init__(self, host, port, name):
+    def __init__(self, host, port, name, windowed):
 
         # Server info
         self._host = host
         self._port = port
+        self._windowed = windowed
 
         # Local player instance
         identifier = "{:x}".format(random.getrandbits(32))
@@ -52,7 +53,7 @@ class Client:
         self._transport.run()
 
         # Create GUI
-        self._gui = gui.GUI()
+        self._gui = gui.GUI(self._windowed)
         self._gui.on_ready = self._ready
         self._gui.on_trump_picked = self._pick_trump
         self._gui.on_card_picked = self._play_card
