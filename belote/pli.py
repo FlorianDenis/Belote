@@ -60,11 +60,11 @@ class Pli:
 
 
     def can_play_card(self, player, card, current_hand):
-        current_player_idx = self._ordered_player_indices[len(self._cards)]
-
         # Complete ?
         if self.is_complete:
             return False
+
+        current_player_idx = self._ordered_player_indices[len(self._cards)]
 
         # This player's turn ?
         if player is not self._players[current_player_idx]:
