@@ -5,6 +5,7 @@
 #
 
 import logging
+import queue
 import socket
 import threading
 
@@ -43,11 +44,21 @@ class Server:
         # Array of Server.Link instances
         self._links = []
 
-        # Client accepting thread
         self._running = False
-        self._thread = threading.Thread(
+
+        # RX queue
+        self._rx_queue = queue.Queue()
+        self._rx_queue_not_empty = threading.Event()
+
+        # Client accepting thread
+        self._accepting_thread = threading.Thread(
             target=self.__accept_incoming)
-        self._thread.deamon = True
+        self._accepting_thread.deamon = True
+
+        # Incoming packet handling thread
+        self._handling_thread = threading.Thread(
+            target=self.__handle_packet)
+        self._handling_thread.deamon = True
 
 
     def __lookup_link(self, transport=None):
@@ -59,15 +70,22 @@ class Server:
 
     def run(self):
         self._running = True
-        self._thread.start()
+        self._handling_thread.start()
+        self._accepting_thread.start()
 
 
     def stop(self):
         self._running = False
 
         current_thread = threading.current_thread()
-        if self._thread.is_alive() and current_thread is not self._thread:
-            self._thread.join()
+
+        if self._accepting_thread.is_alive() and \
+            current_thread is not self._accepting_thread:
+            self._accepting_thread.join()
+
+        if self._handling_thread.is_alive() and \
+            current_thread is not self._handling_thread:
+            self._handling_thread.join()
 
         for link in self._links:
             link.transport.stop()
@@ -98,7 +116,6 @@ class Server:
 
 
     def _handle_command(self, link, rx_cmd):
-
         # Create a new player for current game
         if rx_cmd.opcode == constants.CommandOpcode.CREATE_PLAYER:
             # Add a new player to current game
@@ -125,14 +142,31 @@ class Server:
             self._game.play_card(link.player, card.Card(rx_cmd.args[0]))
 
 
-    def __recv(self, transport, rx_packet):
+    def __handle_packet(self):
+        while self._running:
+            # Wait for incoming commands
+            rx = self._rx_queue_not_empty.wait(timeout=1)
 
-        link = self.__lookup_link(transport=transport)
-        if rx_packet.msg_type == constants.MessageType.COMMAND:
+            if not rx: continue
+
+            (rx_packet, link) = self._rx_queue.get()
+            if self._rx_queue.empty():
+                self._rx_queue_not_empty.clear()
+
+            # Server only needs to handle commands for now
+            if rx_packet.msg_type != constants.MessageType.COMMAND:
+                log.warn("Unhandled packet: {}", str(rx_packet))
+                return
+
             self._handle_command(link, rx_packet)
-            return
 
-        log.warn("Unhandled packet: {}", str(rx_packet))
+
+    def __recv(self, transport, rx_packet):
+        # Do not process right here; set on the queue so that all packets can
+        # be processed by the same thread
+        link = self.__lookup_link(transport=transport)
+        self._rx_queue.put((rx_packet, link))
+        self._rx_queue_not_empty.set()
 
 
     def __drop(self, transport):
