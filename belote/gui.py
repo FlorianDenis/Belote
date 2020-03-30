@@ -271,7 +271,8 @@ class GUI:
         for card in reversed(self._card_rects):
             if card.collidepoint(pygame.mouse.get_pos()):
                 card_idx = self._card_rects.index(card)
-                self.on_card_picked(self._game.hand[card_idx])
+                if card_idx < len(self._game.hand):
+                    self.on_card_picked(self._game.hand[card_idx])
                 return
 
         # Picked a trump
