@@ -133,7 +133,7 @@ class Game:
             return
 
         if player.is_ready:
-            log.error("Player already ready")
+            log.error("Player {} already ready".format(player.name))
             return
 
         player.set_ready(True)
