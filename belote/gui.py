@@ -241,8 +241,8 @@ class GUI:
 
         # Trump selection if necessary
         self._trump_rects = []
-        if (proxy.state == game.Game.State.ANNOUNCING
-            and proxy.starting_player == 0):
+        if proxy.state == game.Game.State.ANNOUNCING \
+            and proxy.starting_player == 0:
 
             trumps = [trump.value for trump in constants.Trump]
 
