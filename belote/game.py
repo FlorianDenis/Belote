@@ -132,6 +132,10 @@ class Game:
             log.error("Attempting to set ready unknown player")
             return
 
+        if player.is_ready:
+            log.error("Player already ready")
+            return
+
         player.set_ready(True)
 
         for player in self._players:
