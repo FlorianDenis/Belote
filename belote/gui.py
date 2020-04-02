@@ -65,10 +65,10 @@ class GUI:
                     self._handle_click(event)
 
 
-    def _card_texture(self, card):
+    def _texture(self, name):
         path = os.path.dirname(__file__)
-        texture_name = 'resources/{}.png'.format(card)
-        texture_path = os.path.join(path, texture_name)
+        texture_filename = '{}.png'.format(name)
+        texture_path = os.path.join(path, 'resources', texture_filename)
         return pygame.image.load(texture_path)
 
 
@@ -162,7 +162,7 @@ class GUI:
                     hand_zone_rect.min_y),
                 size = card_size)
 
-            card_texture = self._card_texture(proxy.hand[i].code)
+            card_texture = self._texture(proxy.hand[i].code)
             card_texture = pygame.transform.scale(card_texture,
                 (card_size.width, card_size.height))
 
@@ -194,7 +194,7 @@ class GUI:
             if not card.code:
                 continue
 
-            card_texture = self._card_texture(card.code)
+            card_texture = self._texture(card.code)
             card_texture = pygame.transform.scale(card_texture,
                 (card_size.width, card_size.height))
 
@@ -230,8 +230,8 @@ class GUI:
 
         # Current Trump suit
         if proxy.trump_suit:
-            trump_rect = Rect(origin = Point(10, 10), size = Size(30, 30))
-            trump_texture = self._card_texture(proxy.trump_suit)
+            trump_rect = Rect(origin = Point(10, 10), size = Size(50, 50))
+            trump_texture = self._texture(proxy.trump_suit)
             trump_texture = pygame.transform.scale(trump_texture,
                 (trump_rect.width, trump_rect.height))
 
@@ -246,21 +246,33 @@ class GUI:
 
             trumps = [trump.value for trump in constants.Trump]
 
-            for idx in range(len(trumps)):
-                suit_size = Size(150, 150)
-                suit_texture = self._card_texture(trumps[idx])
-                suit_texture = pygame.transform.scale(suit_texture,
-                    (suit_size.width, suit_size.height))
+            trump_zone_contour = card_zone_rect.inset_by(200, 200)
+            trump_center = {
+                constants.Trump.H : trump_zone_contour.top_left,
+                constants.Trump.S : trump_zone_contour.center_top,
+                constants.Trump.C : trump_zone_contour.bottom_left,
+                constants.Trump.D : trump_zone_contour.center_bottom,
+                constants.Trump.AT: trump_zone_contour.top_right,
+                constants.Trump.NT: trump_zone_contour.bottom_right,
+            }
 
-                suit_rect = Rect(center = card_center[idx], size = suit_size)
+            for trump in trumps:
+                trump_size = Size(150, 150)
+                trump_texture = self._texture(trump)
+                trump_texture = pygame.transform.scale(trump_texture,
+                    (trump_size.width, trump_size.height))
+
+                trump_rect = Rect(
+                    center = trump_center[trump],
+                    size = trump_size)
 
                 self._trump_rects.append(pygame.Rect(
-                    suit_rect.origin.x, suit_rect.origin.y,
-                    suit_rect.width, suit_rect.height
+                    trump_rect.origin.x, trump_rect.origin.y,
+                    trump_rect.width, trump_rect.height
                 ))
 
-                self._win.blit(suit_texture,
-                    (suit_rect.origin.x, suit_rect.origin.y))
+                self._win.blit(trump_texture,
+                    (trump_rect.origin.x, trump_rect.origin.y))
 
         pygame.display.update()
 

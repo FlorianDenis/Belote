@@ -42,10 +42,18 @@ class Card():
         return self._code
 
 
+    @property
+    def suit(self):
+        return self._code[-1:]
+
+
+    @property
+    def value(self):
+        return self._code[:-1]
+
+
     def __init__(self, code):
         self._code = code
-        self._suit = code[-1:]
-        self._value = code[:-1]
 
 
     def __eq__(self, other):
@@ -56,7 +64,7 @@ class Card():
 
     def sort_value(self, trump_suit):
 
-        is_trump = (trump_suit == self._suit)
+        is_trump = (trump_suit == self.suit or trump_suit == constants.Trump.AT)
 
         # Global order of each suit within one's game
         suit_order = ['H', 'C', 'D', 'S']
@@ -64,36 +72,46 @@ class Card():
         # Order within the suit, depending if we are trump
         value_order = (Card.trump_order if is_trump else Card.regular_order)
 
-        return suit_order.index(self._suit) * 10 + value_order.index(self._value)
+        return suit_order.index(self.suit) * 10 + value_order.index(self.value)
 
 
     def point_value(self, trump_suit):
 
-        is_trump = (trump_suit == self._suit)
+        is_trump = (trump_suit == self.suit or trump_suit == constants.Trump.AT)
 
-        points =  (Card.trump_points if is_trump else Card.regular_points)
+        points = (Card.trump_points if is_trump else Card.regular_points)
 
-        return float(points[self._value])
+        if trump_suit == constants.Trump.AT:
+            multiplier = float(152) / 248
+        elif trump_suit == constants.Trump.NT:
+            multiplier = float(152) / 120
+        else:
+            multiplier = 1
+
+        return multiplier * points[self.value]
 
 
     def overtakes(self, other, trump_suit):
         if other is None:
             return True
 
-        is_trump = (trump_suit == self._suit)
-        other_trump = (trump_suit == other._suit)
+        is_trump = (trump_suit == self.suit
+            or trump_suit == constants.Trump.AT)
+
+        other_trump = (trump_suit == other.suit
+            or trump_suit == constants.Trump.AT)
 
         # The trump always wins against anything else
         if is_trump != other_trump:
             return is_trump
 
         # Are we the right suit ?
-        if self._suit != other._suit:
+        if self.suit != other.suit:
             return False
 
         value_order = (Card.trump_order if is_trump else Card.regular_order)
 
-        return value_order.index(self._value) < value_order.index(other._value)
+        return value_order.index(self.value) < value_order.index(other.value)
 
 
 
