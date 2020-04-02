@@ -174,7 +174,8 @@ class Game:
             log.error("Trying to play card not in player's hand")
             return
 
-        if not self._current_pli.can_play_card(player, card, hand):
+        if not self._current_pli.can_play_card(
+            player, card, hand, self._trump_suit):
             log.error("Given player cannot play this card right now")
             return
 
@@ -286,7 +287,6 @@ class Game:
         proxy._player_points = round(self._points[(player_index % 2)])
         proxy._enemy_points  = round(self._points[(player_index + 1) % 2])
 
-
         starting_player_idx = (self._players.index(
             self._current_pli.starting_player)
                 if self._current_pli
@@ -310,6 +310,13 @@ class Game:
         proxy._hand = self._hands[player] if player in self._hands else []
         proxy._hand.sort(key=lambda x: x.sort_value(self._trump_suit))
 
+        proxy._legal = [
+            (1 if self._current_pli.is_card_legal(player ,card, proxy._hand,
+                self._trump_suit) else 0)
+                    if self._current_pli else 0
+                for card in proxy._hand
+            ]
+
         return proxy
 
 
@@ -328,6 +335,7 @@ class GameProxy:
         self._players = []
         self._current_pli = []
         self._hand = []
+        self._legal = []
 
 
     @property
@@ -348,6 +356,11 @@ class GameProxy:
     @property
     def hand(self):
         return self._hand
+
+
+    @property
+    def legal(self):
+        return self._legal
 
 
     @property
@@ -384,6 +397,7 @@ class GameProxy:
 
         args.append(str(len(self._hand)))
         args += [card.code for card in self._hand]
+        args += [str(legal) for legal in self._legal]
 
         return args
 
@@ -418,6 +432,8 @@ def from_args(args):
     hand_count = int(args[idx])
     idx += 1
     proxy._hand = [card.Card(code) for code in args[idx: idx+hand_count]]
+    idx += hand_count
+    proxy._legal = [int(legal) for legal in args[idx: idx+hand_count]]
     idx += hand_count
 
     return proxy

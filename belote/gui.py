@@ -156,10 +156,12 @@ class GUI:
         self._card_rects = []
 
         for i in range(num_cards_hand):
+            card_hilight = proxy.legal[i] and 1 - proxy.legal[i] in proxy.legal
+
             card_position = Rect(
                 origin = Point(
                     hand_zone_rect.min_x + i * card_spacing,
-                    hand_zone_rect.min_y),
+                    hand_zone_rect.min_y - (30 if card_hilight else 0)),
                 size = card_size)
 
             card_texture = self._texture(proxy.hand[i].code)
