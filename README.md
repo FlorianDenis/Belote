@@ -18,10 +18,8 @@ python client.py belote.floriandenis.net
 
 ## Missing / To-Do
 
- - Tout-atout, sans-atout
  - Voir le dernier pli
  - Indicateur pour les joueurs READY
- - S'assurer qu'un move est légal
  - Annonces in-game
  - Changer l'icone
  - Compter belote/rebelote dans les points ?
