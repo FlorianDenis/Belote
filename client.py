@@ -24,6 +24,7 @@ def main():
     logging.getLogger('belote').setLevel(logging.DEBUG)
     log = logging.getLogger('cli')
 
+    default_name = os.environ['USER'] if 'USER' in os.environ else 'Guest'
 
     # Arguments
     parser = argparse.ArgumentParser(description=__doc__)
@@ -32,7 +33,7 @@ def main():
         help='Port')
     parser.add_argument('-w', '--windowed', action='store_true',
         help='Windowed mode')
-    parser.add_argument('-n', '--name', default=os.environ['USER'],
+    parser.add_argument('-n', '--name', default=default_name,
         help='Player name')
 
     args = parser.parse_args()
