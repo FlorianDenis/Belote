@@ -112,9 +112,9 @@ class GUI:
         # Game status
         status = {
             game.Game.State.WAITING_FOR_PLAYERS: "Waiting...",
-            game.Game.State.READY_TO_START:      "Ready",
             game.Game.State.ANNOUNCING:          "Announcing...",
-            game.Game.State.ONGOING:              "",
+            game.Game.State.ONGOING:             "",
+            game.Game.State.FINISHED:            "Finished",
         }
 
         status_text = font.render(status[proxy.state], 1, (255, 255, 255))

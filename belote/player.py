@@ -20,16 +20,7 @@ class Player:
     def identifier(self):
         return self._identifier
 
-    @property
-    def is_ready(self):
-        return self._ready
-
-
-    def set_ready(self, ready):
-        self._ready = ready 
-
 
     def __init__(self, identifier, name):
         self._identifier = identifier
         self._name = name
-        self._ready = False

@@ -27,9 +27,9 @@ class Game:
 
     State = Enum('State', [(a, a) for a in (
         'WAITING_FOR_PLAYERS',
-        'READY_TO_START',
         'ANNOUNCING',
-        'ONGOING'
+        'ONGOING',
+        'FINISHED',
     )], type=str)
 
 
@@ -66,11 +66,11 @@ class Game:
     def state(self):
         if len(self._players) < 4:
             return Game.State.WAITING_FOR_PLAYERS
-        if not self._round_ongoing:
-            return Game.State.READY_TO_START
-        if self._trump_suit == None:
+        if self._trump_suit is None:
             return Game.State.ANNOUNCING
-        return Game.State.ONGOING
+        if self._round_ongoing:
+            return Game.State.ONGOING
+        return Game.State.FINISHED
 
 
     def _cut(self, deck):
@@ -111,44 +111,20 @@ class Game:
 
 
     def _start_round(self):
-        if self.state != Game.State.READY_TO_START:
+        if self._round_ongoing:
             log.error("Invalid state to start new round")
             return
 
         self._round_ongoing = True
 
+         # Reset values from previous round we want to keep while "Finished"
+        self._trump_suit = None
+        self._points = [0.0, 0.0]
+
         self._deck = self._cut(self._deck)
         self._hands = self._deal(self._deck)
 
         self._start_pli(self._starting_player)
-
-
-    def set_player_ready(self, player):
-        if self.state != Game.State.READY_TO_START:
-            log.error("Attempting to set player ready while in invalid state")
-            return
-
-        if not player in self._players:
-            log.error("Attempting to set ready unknown player")
-            return
-
-        if player.is_ready:
-            log.error("Player {} already ready".format(player.name))
-            return
-
-        player.set_ready(True)
-
-        for player in self._players:
-            if not player.is_ready:
-                self.on_status_changed()
-                return
-
-        # Reset the score from the previous match
-        self._points = [0.0, 0.0]
-
-        # Everyone ready: let's go
-        self._start_round()
-
 
 
     def pick_trump(self, player, suit):
@@ -189,6 +165,7 @@ class Game:
             if is_last_pli:
                 # Round completed, will terminate the round in 2 seconds
                 threading.Timer(2, self._finish_round).start()
+                threading.Timer(10, self._start_round).start()
             else:
                 # Hand completed, will reset the pli in 2 seconds
                 threading.Timer(2, self._finish_pli).start()
@@ -219,10 +196,6 @@ class Game:
         self._plis = [[], []]
         self._starting_player = (self._starting_player + 1) % 4
         self._round_ongoing = False
-        self._trump_suit = None
-
-        for player in self._players:
-            player.set_ready(False)
 
         self.on_status_changed()
 
@@ -248,7 +221,10 @@ class Game:
 
         self._players.append(player)
 
-        self.on_status_changed()
+        if len(self._players) == 4:
+            self._start_round()
+        else:
+            self.on_status_changed()
 
 
     def remove_player(self, player):
