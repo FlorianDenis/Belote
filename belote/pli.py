@@ -87,6 +87,8 @@ class Pli:
             if card.suit == required_suit)
         hand_contains_overtaking = any(card for card in hand
             if card.overtakes(taking_card, trump_suit))
+        hand_contains_trump = any(card for card in hand
+            if card.suit == trump_suit)
 
         # If there are still cards of the required suit in the hand, only those
         # are legal
@@ -110,6 +112,8 @@ class Pli:
         # except: if the taking player is the player's partner!
         if hand_contains_overtaking and taking_player_idx % 2 != player_idx % 2:
             return card.overtakes(taking_card, trump_suit)
+        if hand_contains_trump and taking_player_idx % 2 != player_idx % 2:
+            return card.suit == trump_suit
 
         # We contain neither the required color nor do we have to play
         # the trump suit: anything goes
