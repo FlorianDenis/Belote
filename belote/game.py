@@ -46,6 +46,9 @@ class Game:
         # The current pli being played
         self._current_pli = None
 
+        # The previous pli played
+        self._previous_pli = None
+
         # By team (even/odd), won pli so far and point total
         self._plis = [[], []]
         self._points = [0.0, 0.0]
@@ -120,7 +123,7 @@ class Game:
          # Reset values from previous round we want to keep while "Finished"
         self._trump_suit = None
         self._points = [0.0, 0.0]
-
+        self._previous_pli = None
         self._deck = self._cut(self._deck)
         self._hands = self._deal(self._deck)
 
@@ -186,6 +189,8 @@ class Game:
 
         self._plis[taking_player_idx % 2].append(self._current_pli)
         self._points[taking_player_idx % 2] += points
+
+        self._previous_pli = self._current_pli
 
         self._start_pli(taking_player_idx)
 
@@ -283,6 +288,13 @@ class Game:
             for idx in idx_permutation
         ]
 
+        proxy._previous_pli = [
+            self._previous_pli.card_played_by(self._players[idx])
+                if self._previous_pli and self._previous_pli.card_played_by(self._players[idx])
+                else card.Card("")
+                for idx in idx_permutation
+        ]
+
         proxy._hand = self._hands[player] if player in self._hands else []
         proxy._hand.sort(key=lambda x: x.sort_value(self._trump_suit))
 
@@ -348,7 +360,10 @@ class GameProxy:
     def current_pli(self):
         return self._current_pli
 
-
+    @property
+    def previous_pli(self):
+        return self._previous_pli
+    
     @property
     def player_points(self):
         return self._player_points
@@ -370,6 +385,7 @@ class GameProxy:
 
         args += self._players
         args += [card.code for card in self._current_pli]
+        args += [card.code for card in self._previous_pli]
 
         args.append(str(len(self._hand)))
         args += [card.code for card in self._hand]
@@ -403,6 +419,8 @@ def from_args(args):
     idx += 4
 
     proxy._current_pli = [card.Card(code) for code in args[idx: idx+4]]
+    idx += 4
+    proxy._previous_pli = [card.Card(code) for code in args[idx: idx+4]]
     idx += 4
 
     hand_count = int(args[idx])
