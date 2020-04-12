@@ -139,6 +139,7 @@ class GUI:
         # Hand
         card_spacing = 30
         card_size = Size(130, 200)
+        smalL_card_size = Size(65, 100)
 
         num_cards_hand = len(proxy.hand)
 
@@ -178,32 +179,20 @@ class GUI:
                 (card_position.origin.x, card_position.origin.y))
 
         # Current pli
-        card_zone_rect = Rect(
-            origin = game_area.origin,
-            size = Size(game_area.width, game_area.height - hand_zone_height))
+        main_play_area_size = Size(game_area.width, game_area.height - hand_zone_height)
+        self.render_pli(self._current_pli, game_area.origin, main_play_aread_size, card_size)
 
-        card_zone_contour = card_zone_rect.inset_by(250, 150)
-        card_center = {
-            0: card_zone_contour.center_bottom,
-            1: card_zone_contour.center_right,
-            2: card_zone_contour.center_top,
-            3: card_zone_contour.center_left,
-        }
-
-        for idx in range(4):
-            card = proxy.current_pli[idx]
-
-            if not card.code:
-                continue
-
-            card_texture = self._texture(card.code)
-            card_texture = pygame.transform.scale(card_texture,
-                (card_size.width, card_size.height))
-
-            card_rect = Rect(center = card_center[idx], size = card_size)
-
-            self._win.blit(card_texture,
-                (card_rect.origin.x, card_rect.origin.y))
+        # Previous pli
+        # Displayed to the right of the player's hand
+        previous_pli_origin = Point(
+            (game_area.max_x - hand_zone_width) / 2
+            game_area.max_y - hand_zone_height,
+        )
+        previous_pli_size = Size(
+            small_card_size.width * 3 + 10
+            small_card_size.height * 3 + 10
+        )
+        self.render_pli(self._previous_plim, previous_pli_origin, previous_pli_size, small_card_size)
 
 
         # Player names
@@ -277,6 +266,40 @@ class GUI:
                     (trump_rect.origin.x, trump_rect.origin.y))
 
         pygame.display.update()
+
+    # Create and appends the rect to self
+    # Also apply the bit texture to the rects
+    def render_pli(pli, origin, size, card_size):
+        
+        if (size.width < card_size.width * 3) or (size.height < card_size.height * 3):
+            print "render_pli: Sizes are incorrectly set - some cards may overlap :("
+
+        card_zone_rect = Rect(origin,size)
+        card_zone_contour = card_zone_rect.inset_by(
+            card_size.width / 2, 
+            card_size.height /2
+        )
+        card_center = {
+            0: card_zone_contour.center_bottom,
+            1: card_zone_contour.center_right,
+            2: card_zone_contour.center_top,
+            3: card_zone_contour.center_left,
+        }
+
+        for idx in range(4):
+            card = pli[idx]
+
+            if not card.code:
+                continue
+
+            card_texture = self._texture(card.code)
+            card_texture = pygame.transform.scale(card_texture,
+                (card_size.width, card_size.height))
+
+            card_rect = Rect(center = card_center[idx], size = card_size)
+
+            self._win.blit(card_texture,
+                (card_rect.origin.x, card_rect.origin.y))
 
 
     def _handle_click(self, event):
