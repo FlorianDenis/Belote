@@ -39,6 +39,7 @@ class GUI:
         self._trump_rects = []
 
         self._game = None
+        self._texture_cache = {}
 
         pygame.display.set_caption("Belote")
         pygame.init()
@@ -65,11 +66,21 @@ class GUI:
                     self._handle_click(event)
 
 
-    def _texture(self, name):
+    def _texture(self, name, size = None):
+
+        key = (name, size)
+        if key in self._texture_cache:
+            return self._texture_cache[key]
+
         path = os.path.dirname(__file__)
         texture_filename = '{}.png'.format(name)
         texture_path = os.path.join(path, 'resources', texture_filename)
-        return pygame.image.load(texture_path)
+        surface = pygame.image.load(texture_path)
+        if size != None:
+            surface = pygame.transform.smoothscale(surface, size)
+        self._texture_cache[key] = surface
+
+        return surface
 
 
     def _redraw(self, proxy):
@@ -124,7 +135,6 @@ class GUI:
 
         self._win.blit(status_text, (status_origin.x, status_origin.y))
 
-
         # Points
         points = "us: {} - them: {}".format(
             proxy.player_points, proxy.enemy_points)
@@ -134,7 +144,6 @@ class GUI:
             toolbar_rect.mid_y - points_text.get_height() / 2)
 
         self._win.blit(points_text, (points_origin.x, points_origin.y))
-
 
         # Hand
         card_spacing = 30
@@ -165,43 +174,28 @@ class GUI:
                     hand_zone_rect.min_y - (30 if card_hilight else 0)),
                 size = card_size)
 
-            card_texture = self._texture(proxy.hand[i].code)
-            card_texture = pygame.transform.scale(card_texture,
-                (card_size.width, card_size.height))
-
             card_rect = pygame.Rect(
                 card_position.origin.x, card_position.origin.y,
                 card_size.width, card_size.height)
 
             self._card_rects.append(card_rect)
-
-            self._win.blit(card_texture,
-                (card_position.origin.x, card_position.origin.y))
+            self._smooth_draw(proxy.hand[i].code, card_position)
 
         # Current pli
-        main_play_area_size = Size(game_area.width, game_area.height - hand_zone_height)
-        card_zone_rect = Rect(origin = game_area.origin, size = main_play_area_size)
-        self.render_pli(proxy.current_pli, game_area.origin, main_play_area_size, card_size)
+        main_play_area_size = Size(
+            game_area.width,
+            game_area.height - hand_zone_height)
+        card_zone_rect = Rect(
+            origin = game_area.origin,
+            size = main_play_area_size)
+
+        self._render_pli(proxy.current_pli, card_zone_rect, card_size)
 
         # Previous pli
-        # Displayed to the right of the player's hand
-        previous_pli_size = Size(
-            320,
-            280
-        )
-        previous_pli_origin = Point(
-            0,
-            0
-        )
-        self.render_pli(
-            proxy.previous_pli, 
-            previous_pli_origin, 
-            previous_pli_size, 
-            small_card_size
-        )
-
-
-
+        previous_pli_rect = Rect(
+            origin = Point(0, 0),
+            size = Size(320, 280))
+        self._render_pli(proxy.previous_pli, previous_pli_rect, small_card_size)
 
         # Player names
         player_names_contour = card_zone_rect.inset_by(50, 20)
@@ -230,13 +224,7 @@ class GUI:
         # Current Trump suit
         if proxy.trump_suit:
             trump_rect = Rect(origin = Point(10, 10), size = Size(50, 50))
-            trump_texture = self._texture(proxy.trump_suit)
-            trump_texture = pygame.transform.scale(trump_texture,
-                (trump_rect.width, trump_rect.height))
-
-            self._win.blit(trump_texture,
-                (trump_rect.origin.x, trump_rect.origin.y))
-
+            self._smooth_draw(proxy.trump_suit, trump_rect)
 
         # Trump selection if necessary
         self._trump_rects = []
@@ -257,34 +245,29 @@ class GUI:
 
             for trump in trumps:
                 trump_size = Size(150, 150)
-                trump_texture = self._texture(trump)
-                trump_texture = pygame.transform.scale(trump_texture,
-                    (trump_size.width, trump_size.height))
-
                 trump_rect = Rect(
                     center = trump_center[trump],
                     size = trump_size)
-
                 self._trump_rects.append(pygame.Rect(
                     trump_rect.origin.x, trump_rect.origin.y,
                     trump_rect.width, trump_rect.height
                 ))
-
-                self._win.blit(trump_texture,
-                    (trump_rect.origin.x, trump_rect.origin.y))
+                self._smooth_draw(trump, trump_rect)
 
         pygame.display.update()
 
+
+    def _smooth_draw(self, texture_name, rect):
+        texture = self._texture(texture_name, (rect.width, rect.height))
+        self._win.blit(texture, (rect.min_x, rect.min_y))
+
+
     # Create and appends the rect to self
     # Also apply the bit texture to the rects
-    def render_pli(self, pli, origin, size, card_size):
-        
-        # if (size.width < card_size.width * 3) or (size.height < card_size.height * 3):
-        #     print "render_pli: Sizes are incorrectly set - some cards may overlap :("
-        
-        card_zone_rect = Rect(origin = origin, size = size)
-        card_zone_contour = card_zone_rect.inset_by(
-            card_size.width + 25, 
+    def _render_pli(self, pli, rect, card_size):
+
+        card_zone_contour = rect.inset_by(
+            card_size.width + 25,
             card_size.height - 25,
         )
         card_center = {
@@ -300,14 +283,9 @@ class GUI:
             if not card.code:
                 continue
 
-            card_texture = self._texture(card.code)
-            card_texture = pygame.transform.scale(card_texture,
-                (card_size.width, card_size.height))
-
             card_rect = Rect(center = card_center[idx], size = card_size)
 
-            self._win.blit(card_texture,
-                (card_rect.origin.x, card_rect.origin.y))
+            self._smooth_draw(card.code, card_rect)
 
 
     def _handle_click(self, event):
