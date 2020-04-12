@@ -35,11 +35,14 @@ def main():
         help='Windowed mode')
     parser.add_argument('-n', '--name', default=default_name,
         help='Player name')
+    parser.add_argument('-a', '--auto-play', action='store_true',
+        help='Use advanced deep-learning techniques to win against Florian and Henri')
+
 
     args = parser.parse_args()
 
     # Launch client instance
-    client = Client(args.host, int(args.port), args.name, bool(args.windowed))
+    client = Client(args.host, int(args.port), args.name, bool(args.windowed), args.auto_play)
     client.run()
 
 

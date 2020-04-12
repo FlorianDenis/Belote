@@ -376,6 +376,7 @@ class GameProxy:
         args += [str(legal) for legal in self._legal]
 
         return args
+    
 
 
 def from_args(args):

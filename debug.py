@@ -28,19 +28,19 @@ def main():
         _bg=True, _out=sys.stdout, _err=sys.stderr)
 
     # Launch 4 clients instance - sleep a bit between them
-    sh.python("client.py", "localhost", "-p", args.port, "-n", "player1",
+    sh.python("client.py", "localhost", "-p", args.port, "-n", "player1", "--auto-play",
         _bg=True, _out=sys.stdout, _err=sys.stderr)
     time.sleep(0.5)
 
-    sh.python("client.py", "localhost", "-p", args.port, "-n", "player2",
+    sh.python("client.py", "localhost", "-p", args.port, "-n", "player2", "--auto-play",
         _bg=True, _out=sys.stdout, _err=sys.stderr)
     time.sleep(0.5)
 
-    sh.python("client.py", "localhost", "-p", args.port, "-n", "player3",
+    sh.python("client.py", "localhost", "-p", args.port, "-n", "player3", "--auto-play",
         _bg=True, _out=sys.stdout, _err=sys.stderr)
     time.sleep(0.5)
 
-    sh.python("client.py", "localhost", "-p", args.port, "-n", "player4",
+    sh.python("client.py", "localhost", "-p", args.port, "-n", "player4", "--auto-play",
         _bg=True, _out=sys.stdout, _err=sys.stderr)
 
 

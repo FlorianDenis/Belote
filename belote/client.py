@@ -8,6 +8,7 @@ import logging
 import random
 import socket
 import os
+import threading
 
 from . import constants
 from . import packet
@@ -21,12 +22,13 @@ log = logging.getLogger(__name__)
 
 class Client:
 
-    def __init__(self, host, port, name, windowed):
+    def __init__(self, host, port, name, windowed, auto_play = False):
 
         # Server info
         self._host = host
         self._port = port
         self._windowed = windowed
+        self._auto_play = auto_play
 
         # Local player instance
         identifier = "{:x}".format(random.getrandbits(32))
@@ -61,7 +63,9 @@ class Client:
         # Register as a new player
         self._register()
 
+        log.info("{} - Finished client initialization: {}".format(self._player.name, self._auto_play))
         self._gui.run()
+        
 
 
     def _perform(self, opcode, *args):
@@ -94,6 +98,10 @@ class Client:
 
 
     def _handle_new_proxy(self, proxy):
+        log.info("{} - Received a new proxy".format(self._player.name))
+        if self._auto_play:
+            log.info ("{} - Auto playing in 5 seconds".format(self._player.name))
+            threading.Timer(5, self.auto_play, [proxy]).start()
         self._gui.set_game(proxy)
 
 
@@ -112,3 +120,23 @@ class Client:
 
     def stop(self):
         self._transport.stop()
+
+    def auto_play(self, game_proxy):
+        log.info("{} - Auto playing".format(self._player.name))
+        if (game_proxy.state == game.Game.State.WAITING_FOR_PLAYERS):
+            log.info("{} - Waiting for players!".format(self._player.name))
+            return
+        if (game_proxy.state == game.Game.State.ANNOUNCING):
+            log.info("{} - Auto-try to annouce No Trup".format(self._player.name))
+            self._pick_trump(constants.Trump.NT)
+        if (game_proxy.state == game.Game.State.ONGOING):
+            try:
+                legal_index = game_proxy.legal.index(1)
+                card = game_proxy.hand[legal_index]
+                log.info("{} - Playing my first legal card: {}".format(self._player.name, card.code))
+                self._play_card(card)
+            except Exception as e:
+                return
+        if (game_proxy.state == game.Game.State.FINISHED):
+            log.info("{} - Game is finished".format(self._player.name))
+            return
