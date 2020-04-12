@@ -139,7 +139,7 @@ class GUI:
         # Hand
         card_spacing = 30
         card_size = Size(130, 200)
-        smalL_card_size = Size(65, 100)
+        small_card_size = Size(65, 100)
 
         num_cards_hand = len(proxy.hand)
 
@@ -180,19 +180,27 @@ class GUI:
 
         # Current pli
         main_play_area_size = Size(game_area.width, game_area.height - hand_zone_height)
-        self.render_pli(self._current_pli, game_area.origin, main_play_aread_size, card_size)
+        card_zone_rect = Rect(origin = game_area.origin, size = main_play_area_size)
+        self.render_pli(proxy.current_pli, game_area.origin, main_play_area_size, card_size)
 
         # Previous pli
         # Displayed to the right of the player's hand
         previous_pli_origin = Point(
-            (game_area.max_x - hand_zone_width) / 2
-            game_area.max_y - hand_zone_height,
+            game_area.max_x - (hand_zone_width / 2),
+            game_area.max_y - 2 * hand_zone_height
         )
         previous_pli_size = Size(
-            small_card_size.width * 3 + 10
+            small_card_size.width * 3 + 10,
             small_card_size.height * 3 + 10
         )
-        self.render_pli(self._previous_plim, previous_pli_origin, previous_pli_size, small_card_size)
+        self.render_pli(
+            proxy.previous_pli, 
+            previous_pli_origin, 
+            previous_pli_size, 
+            small_card_size
+        )
+
+
 
 
         # Player names
@@ -269,15 +277,15 @@ class GUI:
 
     # Create and appends the rect to self
     # Also apply the bit texture to the rects
-    def render_pli(pli, origin, size, card_size):
+    def render_pli(self, pli, origin, size, card_size):
         
-        if (size.width < card_size.width * 3) or (size.height < card_size.height * 3):
-            print "render_pli: Sizes are incorrectly set - some cards may overlap :("
-
-        card_zone_rect = Rect(origin,size)
+        # if (size.width < card_size.width * 3) or (size.height < card_size.height * 3):
+        #     print "render_pli: Sizes are incorrectly set - some cards may overlap :("
+        
+        card_zone_rect = Rect(origin = origin, size = size)
         card_zone_contour = card_zone_rect.inset_by(
-            card_size.width / 2, 
-            card_size.height /2
+            card_size.width + 25, 
+            card_size.height,
         )
         card_center = {
             0: card_zone_contour.center_bottom,

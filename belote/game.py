@@ -191,7 +191,7 @@ class Game:
         self._points[taking_player_idx % 2] += points
 
         self._previous_pli = self._current_pli
-=
+
         self._start_pli(taking_player_idx)
 
 
