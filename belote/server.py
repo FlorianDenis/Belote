@@ -123,12 +123,6 @@ class Server:
                 link.player = player.Player(rx_cmd.args[0], rx_cmd.args[1])
                 self._game.add_player(link.player)
 
-        # Set player as ready
-        if rx_cmd.opcode == constants.CommandOpcode.PLAYER_READY:
-            if link.player is None:
-                return
-            self._game.set_player_ready(link.player)
-
         # Pick the trump color
         if rx_cmd.opcode == constants.CommandOpcode.PICK_TRUMP:
             if link.player is None:

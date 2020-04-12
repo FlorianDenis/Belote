@@ -29,12 +29,10 @@ class GUI:
         self._running = False
 
         # Callbacks
-        self.on_ready = None
         self.on_trump_picked = None
         self.on_card_picked = None
 
         # Position information for collision detection
-        self._toolbar_rect = pygame.Rect(0, 0, 0, 0)
         self._card_rects = []
         self._trump_rects = []
 
@@ -107,10 +105,6 @@ class GUI:
         toolbar = pygame.Surface((toolbar_rect.width, toolbar_rect.height))
         toolbar = toolbar.convert()
         toolbar.fill((100, 100, 100))
-
-        self._toolbar_rect = pygame.Rect(
-            toolbar_rect.min_x, toolbar_rect.min_y,
-            toolbar_rect.width, toolbar_rect.height)
 
         self._win.blit(toolbar, (toolbar_rect.origin.x, toolbar_rect.origin.y))
 
@@ -305,8 +299,3 @@ class GUI:
                 trump_idx = self._trump_rects.index(trump)
                 self.on_trump_picked(trumps[trump_idx])
                 return
-
-        # Clicked ready ? (or the whole toolbar for that matter...)
-        if self._toolbar_rect.collidepoint(pygame.mouse.get_pos()):
-            self.on_ready()
-            return

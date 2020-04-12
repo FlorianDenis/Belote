@@ -25,7 +25,6 @@ NotifOpcode = Enum('NotifOpcode', [(a, a) for a in (
 # Command opcodes
 CommandOpcode = Enum('CommandOpcode', [(a, a) for a in (
     'CREATE_PLAYER',
-    'PLAYER_READY',
     'PICK_TRUMP',
     'PLAY_CARD',
 )], type=str)
