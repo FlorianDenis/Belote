@@ -185,13 +185,13 @@ class GUI:
 
         # Previous pli
         # Displayed to the right of the player's hand
-        previous_pli_origin = Point(
-            game_area.max_x - (hand_zone_width / 2),
-            game_area.max_y - 2 * hand_zone_height
-        )
         previous_pli_size = Size(
-            small_card_size.width * 3 + 10,
-            small_card_size.height * 3 + 10
+            320,
+            280
+        )
+        previous_pli_origin = Point(
+            0,
+            0
         )
         self.render_pli(
             proxy.previous_pli, 
@@ -285,7 +285,7 @@ class GUI:
         card_zone_rect = Rect(origin = origin, size = size)
         card_zone_contour = card_zone_rect.inset_by(
             card_size.width + 25, 
-            card_size.height,
+            card_size.height - 25,
         )
         card_center = {
             0: card_zone_contour.center_bottom,
