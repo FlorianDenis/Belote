@@ -18,8 +18,6 @@ python client.py belote.floriandenis.net
 
 ## Missing / To-Do
 
- - Voir le dernier pli
- - Indicateur pour les joueurs READY
  - Annonces in-game
  - Changer l'icone
  - Compter belote/rebelote dans les points ?
@@ -27,6 +25,5 @@ python client.py belote.floriandenis.net
  - Spectate
  - Choisir sa place / son co-équipier
  - Gerer proprement la perte d'un joueur
- - La pixelisation m'arrache les yeux
  - Virer `pygame` ?
  - Animations ?
