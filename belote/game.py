@@ -123,7 +123,6 @@ class Game:
          # Reset values from previous round we want to keep while "Finished"
         self._trump_suit = None
         self._points = [0.0, 0.0]
-        self._previous_pli = None
         self._deck = self._cut(self._deck)
         self._hands = self._deal(self._deck)
 
@@ -197,6 +196,7 @@ class Game:
 
     def _reset_round(self):
         self._current_pli = None
+        self._previous_pli = None
         self._hands = {}
         self._plis = [[], []]
         self._starting_player = (self._starting_player + 1) % 4
@@ -290,9 +290,10 @@ class Game:
 
         proxy._previous_pli = [
             self._previous_pli.card_played_by(self._players[idx])
-                if self._previous_pli and self._previous_pli.card_played_by(self._players[idx])
+                if self._previous_pli and self._previous_pli.card_played_by(
+                    self._players[idx])
                 else card.Card("")
-                for idx in idx_permutation
+            for idx in idx_permutation
         ]
 
         proxy._hand = self._hands[player] if player in self._hands else []
@@ -360,10 +361,11 @@ class GameProxy:
     def current_pli(self):
         return self._current_pli
 
+
     @property
     def previous_pli(self):
         return self._previous_pli
-    
+
     @property
     def player_points(self):
         return self._player_points
